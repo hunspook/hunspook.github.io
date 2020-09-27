@@ -1,2 +1,6 @@
 source "https://rubygems.org"
-gemspec
+#gemspec
+gem "jekyll-theme-potato-hacker"
+
+
+gem "jekyll", "~> 4.1"

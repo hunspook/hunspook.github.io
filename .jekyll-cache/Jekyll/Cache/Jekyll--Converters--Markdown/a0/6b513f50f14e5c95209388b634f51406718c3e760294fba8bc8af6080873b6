@@ -1,0 +1,157 @@
+I"o<h2 id="vm-description">VM Description</h2>
+
+<p>This CTF gives a clear analogy how hacking strategies can be performed on a network to compromise it in a safe environment. The objective being to compromise the network/machine and gain Administrative/root privileges on them.</p>
+
+<p>The VM difficulty is easy and is a good training material for the OSCP certification.</p>
+
+<p>Download: <a href="https://www.vulnhub.com/entry/sickos-11,132/">SickOS1.1</a></p>
+
+<p>Author: <a href="https://www.vulnhub.com/author/telspace,90/">D4rk</a></p>
+
+<h2 id="enumeration">Enumeration</h2>
+
+<p>We configure the VM in bridge mode. In order to determine its assigned IP, we run the below command:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$arp</span><span class="nt">-scan</span> <span class="nt">-I</span> wlan0 <span class="nt">-l</span> 
+</code></pre></div></div>
+
+<h3 id="service-enumeration">Service Enumeration</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$nmap</span> <span class="nt">-sV</span> <span class="nt">-sC</span> <span class="nt">-p-</span> <span class="nt">-oA</span> nmap/nmap 192.168.1.41
+</code></pre></div></div>
+
+<div class="row">
+  <div class="col-md-6">
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Open port</th>
+          <th>Service</th>
+          <th>Version</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>22</td>
+          <td> SSH </td>
+          <td>OpenSSH 5.9p1</td>
+        
+        </tr>
+        <tr>
+         <td> 3128 </td>
+          <td> squid </td>
+          <td> 3.1.19 </td>
+        </tr>
+       </tbody>
+    </table>
+  </div>
+</div>
+
+<p>These two ports are not directly exploitable but since squid is running, let’s see which other ports we can access by proxing our connection through SQUID proxy.</p>
+
+<p>We configure an HTTP proxy in our browser. We use the <a href="https://addons.mozilla.org/en-US/firefox/addon/foxyproxy-standard/">FoxyProxy</a> extension.</p>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.1/1.png" alt="foxyproxy" /></p>
+
+<p>Now port 80 is accessible.</p>
+
+<h4 id="web-server-directory-enumeration">Web Server Directory Enumeration</h4>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$HTTP_PROXY</span><span class="o">=</span><span class="s2">"http://192.168.1.41:3128"</span> gobuster <span class="nb">dir</span> <span class="nt">-u</span> http://192.168.1.41 <span class="nt">-w</span> /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt <span class="nt">-x</span> .php,.txt <span class="nt">-o</span> gobuster-80.txt
+</code></pre></div></div>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.1/2.png" alt="gobuster" /></p>
+
+<p>Gobuster finds robots.txt which we need to manually check.</p>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.1/3.png" alt="robots.txt" /></p>
+
+<p>Robots.txt indicates that there is a directory called wolfcms. Let’s check if we can access it.</p>
+
+<div class="panel panel-info">
+      <div class="panel-heading">
+        <h3 class="panel-title">Tip:</h3>
+      </div>
+      <div class="panel-body">
+        If you find an open source 3rd party application running on the target, it's always a good idea to check its GitHub page and to look for files with .conf extension as they may contain sensitive information.
+      </div>
+    </div>
+
+<p>When checking the <a href="https://github.com/wolfcms/wolfcms">GitHub page of WolfCMS</a>, we see that there is a file named updating.txt under docs folder. Let’s check it.</p>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.1/4.png" alt="updating.txt" /></p>
+
+<p>Based on this file, it seems that the target is running WolfCMS version 0.8.2.</p>
+
+<p>Knowing the version allows us to narrow down the search when looking for vulnerabilities in wolfCMS.</p>
+
+<p>A quick Google search returns that WolfCMS version 0.8.2 is vulnerable to an Arbitrary file upload vulnerability. There is a <a href="https://www.exploit-db.com/exploits/36818">PoC</a> in Exploit-db. However, the exploit requires valid credentials which we do not have.</p>
+
+<p>Let’s try admin:admin. If this does not work, we can search for default credentials and attempt a brute force attack as a last resort.</p>
+
+<p>Thankfully, we can login with admin:admin.</p>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.1/5.png" alt="admin login in" /></p>
+
+<h2 id="exploit">Exploit</h2>
+
+<p>Once logged in, we can upload a <a href="https://github.com/pentestmonkey/php-reverse-shell">php reverse shell</a> via the upload file functionality. In order to execute it, we set up a Netcat listener and visit:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http://192.168.1.41/wolfcms/public/php-reverse-shell.php
+</code></pre></div></div>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.1/6.png" alt="admin login in" /></p>
+
+<p>If you are wondering how we knew the URI to use to trigger the exploit, it is mentioned in the PoC we found during the enumeration phase.</p>
+
+<h2 id="privilege-escalation">Privilege Escalation</h2>
+
+<h4 id="1st-method-to-get-root">1st method to get root</h4>
+
+<p>Now that we have a reverse shell as www-data, let’s see what files we have in our home directory.</p>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.1/7.png" alt="home directory" /></p>
+
+<p>There is a connect.py file owned by root. Based on its contents, we can make the following hypothesis:</p>
+
+<div class="alert alert-info" role="alert">
+There is a cron job that runs connect.py as root frequently. Since we can modify the script, we can insert malicious payload and escalate our privileges to root. 
+</div>
+
+<p>Let’s verify our hypothesis.</p>
+
+<p>We upload <a href="https://github.com/DominicBreuker/pspy">pspy</a>, a tool designed to snoop on processes without a need for root permissions. It allows us to see commands run by other users, cron jobs, etc. as they execute.</p>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.1/8.png" alt="pspy" /></p>
+
+<p>Based on pspy output, connect.py runs very minute. Even though pspy returns it’s being  executed with UID 32 (www-data) instead of 0 (root), let’s change its contents. We do this because we don’t see any process running as root which not normal so connect.py is not necessarily running as www-data.</p>
+
+<p>We inject a <a href="http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet">python reverse shell</a> and set up a Netcat listener. Once the script runs again, we have a connection as the root user.</p>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.1/9.png" alt="python reverse shell" /></p>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.1/10.png" alt="reverse shell as root" /></p>
+
+<p>Awesome! Let’s read the flag.</p>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.1/flag.png" alt="flag" /></p>
+
+<h4 id="2nd-way-to-get-root">2nd way to get root</h4>
+
+<p>SickOS is a user of the system based on /etc/passwd output.</p>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.1/11.png" alt="passwd contents" /></p>
+
+<p>Since there are no processes running as this user to hijack, let’s look around to see if we can find his password.</p>
+
+<p>Under wolfcms, there is a config.php file containing the database username and password.</p>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.1/12.png" alt="creds" /></p>
+
+<p>Let’s check if we can use the same password to login as sickos.</p>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.1/13.png" alt="root" /></p>
+
+<p>Great. Not only the password works but sickos can run any command as root.</p>
+
+:ET

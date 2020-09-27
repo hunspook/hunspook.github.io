@@ -1,0 +1,134 @@
+I"�<h2 id="vm-description">VM Description</h2>
+
+<p>This CTF gives a clear analogy how hacking strategies can be performed on a network to compromise it in a safe environment. The objective being to compromise the network/machine and gain Administrative/root privileges on them.</p>
+
+<p>It is second in following series from SickOs and is independent of the prior releases.</p>
+
+<p>This CTF is a good training material for the OSCP certification.</p>
+
+<p>Download: <a href="https://www.vulnhub.com/entry/sickos-12,144/">SickOS1.1</a></p>
+
+<p>Author: <a href="https://www.vulnhub.com/author/telspace,90/">D4rk</a></p>
+
+<h2 id="enumeration">Enumeration</h2>
+
+<p>We configure the VM in bridge mode. In order to determine its assigned IP, we run the below command:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$arp</span><span class="nt">-scan</span> <span class="nt">-I</span> wlan0 <span class="nt">-l</span> 
+</code></pre></div></div>
+
+<h4 id="service-enumeration">Service Enumeration</h4>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$nmap</span> <span class="nt">-sV</span> <span class="nt">-sC</span> <span class="nt">-p-</span> <span class="nt">-oA</span> nmap/nmap 192.168.1.42
+</code></pre></div></div>
+
+<div class="row">
+  <div class="col-md-6">
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Open port</th>
+          <th>Service</th>
+          <th>Version</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>22</td>
+          <td> SSH </td>
+          <td>OpenSSH 5.9p1</td>
+        
+        </tr>
+        <tr>
+         <td> 80 </td>
+          <td> Http </td>
+          <td> Lighttpd 1.4.28</td>
+        </tr>
+       </tbody>
+    </table>
+  </div>
+</div>
+
+<h4 id="web-server-directory-enumeration">Web Server Directory Enumeration</h4>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$gobuster</span> <span class="nb">dir</span> <span class="nt">-u</span> http://192.168.1.42 <span class="nt">-w</span> /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt <span class="nt">-x</span> .php,.txt <span class="nt">-o</span> gobuster-80.txt
+</code></pre></div></div>
+
+<p>Gobuster returns only one indexed directory named test which we need to manually check.</p>
+
+<p>Let’s see which methods are allowed by sending an OPTIONS request.</p>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.2/1.png" alt="options" /></p>
+
+<p>Multiple methods are allowed including PUT.</p>
+
+<h2 id="exploit">Exploit</h2>
+
+<p>The exploit consists in uploading a <a href="https://github.com/pentestmonkey/php-reverse-shell">php reverse shell</a> using the PUT command. There are different ways to do that. To mention a few, we can use:</p>
+
+<ol>
+  <li>Nmap</li>
+  <li>Burp Suite</li>
+  <li>Curl/wget</li>
+</ol>
+
+<p>File upload using Nmap:
+<img src="../assets/img/Walkthroughs/sickos1.2/2.png" alt="upload using nmap" /></p>
+
+<p>File upload using Burp:
+<img src="../assets/img/Walkthroughs/sickos1.2/3.png" alt="upload using burp" /></p>
+
+<p>Files uploaded successfully:
+<img src="../assets/img/Walkthroughs/sickos1.2/4.png" alt="list of uploads" /></p>
+
+<p>Now that the reverse shell is uploaded successfully, let’s set up a Netcat listener and run it:</p>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.2/5.png" alt="reverse shell" /></p>
+
+<p>Awesome! We have reverse shell as www-data.</p>
+
+<h2 id="privilege-escalation">Privilege Escalation</h2>
+
+<div class="panel panel-info">
+      <div class="panel-heading">
+        <h3 class="panel-title">Tip:</h3>
+      </div>
+      <div class="panel-body">
+        When doing an old CTF (This one is from 2016), it is always important to note down the exact date the machine was released. This is because the target is probably vulnerable to multiple Kernel exploits by now. If we decide to look for kernel exploits, we need to check the PoC release date to see if it's older than the machine or not. 
+      </div>
+    </div>
+
+<p>In this case, we don’t find kernel exploits disclosed before the machine release date. Since we want to resolve the machine the intended way, we can go ahead and look for other attack vectors. However, if you would like to test a kernel exploit either way, the target is vulnerable to <a href="https://www.exploit-db.com/exploits/40616">CVE-2016-5195.</a></p>
+
+<p>You will need to comment out the payload for x86 architecture and uncomment the payload for x64 instead before compiling the exploit.</p>
+
+<h4 id="privilege-escalation-the-intended-way">Privilege Escalation the intended way</h4>
+
+<p>When looking for cron jobs, we notice the presence of chkrootkit and lighttpd. This is not the default configuration. Chances are, there is a vulnerability we can exploit.</p>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.2/6.png" alt="cron jobs" /></p>
+
+<p>We check the version of chkrootkit. It’s 0.49.</p>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.2/7.png" alt="chkrootkit version" /></p>
+
+<p>A quick google search returns that the target is vulnerable <a href="https://www.exploit-db.com/exploits/38775">CVE-2014-0476</a></p>
+
+<p>We follow the steps described in the article and insert a payload into update under /tmp directory:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$cat</span> /tmp/update
+<span class="c">#!/bin/bash</span>
+<span class="nb">chown </span>root:root /bin/sh <span class="p">;</span> <span class="nb">chmod</span> +x 4777 /bin/sh
+<span class="nv">$ </span><span class="nb">chmod</span> +x /tmp/update
+</code></pre></div></div>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.2/8.png" alt="update" /></p>
+
+<p>Now we can execute /bin/sh. We have the effective user id of root (0). Awesome.</p>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.2/10.png" alt="euid" /></p>
+
+<p>Let’s read the flag :)</p>
+
+<p><img src="../assets/img/Walkthroughs/sickos1.2/9.png" alt="reverse shell" /></p>
+:ET

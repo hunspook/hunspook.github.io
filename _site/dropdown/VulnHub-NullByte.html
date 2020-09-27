@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>VulnHub - NullByte</title>
+  <meta name="description" content="Walkthrough - NullByte">
+
+  <!-- Social: Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@">
+  <meta name="twitter:title" content="VulnHub - NullByte">
+  <meta name="twitter:description" content="Walkthrough - NullByte">
+  
+  <meta property="twitter:image:src" content="http://localhost:4000/assets/img/opengraph.png">
+  
+
+  <!-- Social: Facebook / Open Graph -->
+  <meta property="og:url" content="http://localhost:4000/dropdown/VulnHub-NullByte.html">
+  <meta property="og:title" content="VulnHub - NullByte">
+  
+  <meta property="og:image" content="http://localhost:4000/assets/img/opengraph.png">
+  
+  <meta property="og:description" content="Walkthrough - NullByte">
+  <meta property="og:site_name" content="Nes-Security-Blog">
+
+  <!-- Social: Schema.org  -->
+  <meta itemprop="name" content="VulnHub - NullByte"/>
+  <meta itemprop="description" content="Walkthrough - NullByte">
+  <meta itemprop="image" content="http://localhost:4000/assets/img/opengraph.png"/>
+
+  <!-- Favicon -->
+  <link rel="shortcut icon" href="/assets/img/icons/favicon.ico" type="image/x-icon" />
+
+  <!-- Android Lolipop Theme Color -->
+  <meta name="theme-color" content="#2a4d14">
+
+  <!-- Styles -->
+  <link rel="stylesheet" id="css-theme" href="/assets/css/main-dark.css">
+  <link rel="stylesheet" href="/assets/css/highlight/gruvbox.css">
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css">
+  <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet">
+
+  <!-- Javascript -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.3.0/d3.min.js"></script>
+  <script type="text/javascript" src="/assets/js/main.js"></script>
+</head>
+
+
+<body class="animated fadeIn">
+  <div class="container">
+    <div id="background-div">
+      <svg id="background-svg">
+        <lineargradient id="Gradient1" x1="0" x2="0" y1="0" y2="1">
+          <stop stop-opacity="0" class="bgColor2" offset="0%" />
+          <stop stop-opacity="0.5" class="bgColor2" offset="10%" />
+          <stop stop-opacity="0.5" class="bgColor1" offset="40%" />
+          <stop stop-opacity="0" class="bgColor1" offset="100%" />
+        </lineargradient>
+        <g id="bg-layer1"></g>
+        <g id="bg-layer2" class="hide"></g>
+        <g id="bg-layer3"></g>
+        <g id="bg-layer4"></g>
+      </svg>
+    </div>
+    <section class="header">
+      <header>
+  <div class="row">
+    <div class="col-xs-12">
+      <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+          <div class="navbar-header">
+            <a class="navbar-toggle collapsed navbar-icon" data-toggle="collapse"
+              data-target="#bs-example-navbar-collapse-1">
+              <i class="fa fa-bars fa-2x"></i>
+            </a>
+            <a class="navbar-brand navbar-icon" href="/">
+                <i class="fa fa-home fa-2x"></i>
+            </a>
+          </div>
+
+          <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+              <li><a href="/">Home</a></li>
+              
+
+              
+                <li class="dropdown dropdown-Cheatsheets">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+                    role="button" aria-haspopup="true" aria-expanded="false">Cheatsheets
+                    <span class="caret"></span>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-Linux privilege escalation cheatsheet">
+                    <li priority="1"><a href="/dropdown/Linux-privilege-escalation-cheatsheet.html">Linux privilege escalation cheatsheet</a></li>
+                  </ul>
+                </li>
+              
+                <li class="dropdown dropdown-Walkthroughs">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+                    role="button" aria-haspopup="true" aria-expanded="false">Walkthroughs
+                    <span class="caret"></span>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-VulnHub - Mr. Robot">
+                    <li priority="1"><a href="/dropdown/VulnHub-Mr.Robot.html">VulnHub - Mr. Robot</a></li>
+                  </ul>
+                </li>
+              
+                <li class="dropdown dropdown-Walkthroughs">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+                    role="button" aria-haspopup="true" aria-expanded="false">Walkthroughs
+                    <span class="caret"></span>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-VulnHub - NullByte">
+                    <li priority="1"><a href="/dropdown/VulnHub-NullByte.html">VulnHub - NullByte</a></li>
+                  </ul>
+                </li>
+              
+                <li class="dropdown dropdown-Walkthroughs">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+                    role="button" aria-haspopup="true" aria-expanded="false">Walkthroughs
+                    <span class="caret"></span>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-VulnHub - Photographer">
+                    <li priority="1"><a href="/dropdown/VulnHub-Photographer.html">VulnHub - Photographer</a></li>
+                  </ul>
+                </li>
+              
+                <li class="dropdown dropdown-Walkthroughs">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+                    role="button" aria-haspopup="true" aria-expanded="false">Walkthroughs
+                    <span class="caret"></span>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-VulnHub - SickOS1.1">
+                    <li priority="1"><a href="/dropdown/VulnHub-SickOS1.1.html">VulnHub - SickOS1.1</a></li>
+                  </ul>
+                </li>
+              
+                <li class="dropdown dropdown-Walkthroughs">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+                    role="button" aria-haspopup="true" aria-expanded="false">Walkthroughs
+                    <span class="caret"></span>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-VulnHub - SickOS1.2">
+                    <li priority="1"><a href="/dropdown/VulnHub-SickOS1.2.html">VulnHub - SickOS1.2</a></li>
+                  </ul>
+                </li>
+              
+                <li class="dropdown dropdown-Walkthroughs">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+                    role="button" aria-haspopup="true" aria-expanded="false">Walkthroughs
+                    <span class="caret"></span>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-VulnHub - SkyTower">
+                    <li priority="1"><a href="/dropdown/VulnHub-SkyTower.html">VulnHub - SkyTower</a></li>
+                  </ul>
+                </li>
+              
+                <li class="dropdown dropdown-Cheatsheets">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+                    role="button" aria-haspopup="true" aria-expanded="false">Cheatsheets
+                    <span class="caret"></span>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-Windows privilege escalation cheatsheet">
+                    <li priority="1"><a href="/dropdown/Windows-privilege-escalation-cheatsheet.html">Windows privilege escalation cheatsheet</a></li>
+                  </ul>
+                </li>
+              
+              
+
+              <script>
+                // clean repeated dropdowns and add <li> to their positions
+                let done = [];
+                let elements = [];
+                $(".dropdown")
+                  //
+                  .each((index0 , value0) => {
+                    let dropdownClass = "."+$(value0)[0].classList[1];
+                    if (done.indexOf(dropdownClass) !== -1) return
+                    done.push(dropdownClass)
+                    let dropdownMain = $(dropdownClass)[0]
+                    let itemsList = $(dropdownClass+">ul>li").sort((a, b) => parseInt(b.getAttribute("priority") || -9999999) - parseInt(a.getAttribute("priority") || -9999999))
+                    $(dropdownClass+">ul>li").remove();
+                    $(dropdownClass+">ul").append(itemsList)
+                    $(dropdownClass).remove();
+                    elements.push(dropdownMain)
+                });
+                let priority = [ "About",  "dropdown", ];
+                elements = elements.concat(...$(".nav-item").remove())
+                priority.map(text => {
+                  elements = elements.filter(node => {
+                      let nodeText = node.querySelector("a").textContent.trim()
+                      if (text == nodeText) {
+                          $(".nav").append(node)
+                          return false;
+                      }
+                      return true;
+                  })
+                });
+                $(".nav").append(elements)
+              </script>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </div>
+</header>
+
+    </section>
+    <section class="content">
+      <div class="row">
+        <!-- <div class="col-sm-2">
+          <div class="pane-separator hidden-xs" style="margin-bottom:30em;"></div>
+          <div class="left-pane">
+          </div>
+        </div> -->
+        <div class="col-sm-8 col-sm-offset-2 content-div">
+          <div class="page-separator hidden-xs">
+            <h1 class="h1-strip" style="padding-bottom:8em; margin-bottom: 0;"></h1>
+          </div>
+          <div class="page-separator visible-xs">
+            <h1 class="h1-strip" style="padding-bottom:2em; margin-bottom: 0;"></h1>
+          </div>
+          <h1 class="post-title page-title" id="title"><a href="#title">VulnHub - NullByte</a></h1>
+          <h2 id="vm-description">VM Description</h2>
+
+<p>This CTF is one of the recommended machines for those preparing for the OSCP exam. It has basic to intermediate difficulty. The objectif is to get the proof.txt flag in the root directory.</p>
+
+<p>Download: <a href="https://www.vulnhub.com/entry/nullbyte-1,126/">Nullbyte</a></p>
+
+<p>Author: <a href="https://www.vulnhub.com/author/ly0n,153/">Ly0n</a></p>
+
+<h2 id="enumeration">Enumeration</h2>
+
+<p>We configure the VM in bridge mode. In order to determine its assigned IP, we run the below command:</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">$</span>arp-scan <span class="nt">-I</span> wlan0 <span class="nt">-l</span> 
+</code></pre></div></div>
+
+<h4 id="service-enumeration">Service Enumeration</h4>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">$</span>nmap <span class="nt">-sV</span> <span class="nt">-sC</span> <span class="nt">-p-</span> <span class="nt">-oA</span> nmap/nmap 192.168.1.142
+</code></pre></div></div>
+
+<div class="row">
+  <div class="col-md-6">
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Open port</th>
+          <th>Service</th>
+          <th>Version</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>80</td>
+          <td> http </td>
+          <td>Apache httpd 2.4.10</td>
+        
+        </tr>
+        <tr>
+         <td> 111 </td>
+          <td> rpcbind </td>
+          <td> 2-4 </td>
+        </tr>
+
+ 	<tr>
+         <td> 777 </td>
+          <td> SSH </td>
+          <td> OpenSSH 6.7p1</td>
+        </tr>
+
+       </tbody>
+    </table>
+  </div>
+</div>
+
+<h4 id="web-server-directory-enumeration">Web Server Directory Enumeration</h4>
+
+<p>Let’s use Gobuster to enumerate the web server’s directories.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">$</span>gobuster <span class="nb">dir</span> <span class="nt">-u</span> http://192.168.1.142 <span class="nt">-w</span> /usr/share/wordlists/directory-list-2.3-medium.txt <span class="nt">-x</span> .php,.txt <span class="nt">-o</span> dirbuster-80.out
+</code></pre></div></div>
+
+<p>Gobuster returns the following directories: 
+uploads, javascript, phpmyadmin and server-status.</p>
+
+<p>Let’s check phpmyadmin as it’s the most promising.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/1.png" alt="phpmyadmin" /></p>
+
+<p>Default database credentials such as root:root do not work. We can either look for credentials by further enumerating available services or try to brute force the application.</p>
+
+<p>In order to save time, let’s run <a href="https://tools.kali.org/password-attacks/hydra">hydra</a> in the background as this process may take some time. We will use root as username and the most popular password list in Kali named <a href="https://github.com/praetorian-code/Hob0Rules/blob/master/wordlists/rockyou.txt.gz">rockyou.txt</a> and located under /usr/share/wordlists.</p>
+
+<p>Before running hydra, we need to remove empty passwords from the list as they result in a different error message which will stop the search (false positive).</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/2.png" alt="Hydra" /></p>
+
+<p>Quickly enough, hydra found the database password <em>sunnyvale</em>. Awesome :)</p>
+
+<h2 id="exploit">Exploit</h2>
+
+<p>There are two ways to obtain a low privilege shell. The first method is to upload a php reverse shell via the mysql database and access it from the web server. The second way is to decode Ramses user password and connect to the target via SSH.</p>
+
+<h4 id="1st-method-to-obtain-a-reverse-shell">1st method to obtain a reverse shell</h4>
+
+<p>In order to upload a php reverse shell to the target via phpmyadmin; we need to:</p>
+
+<ol>
+  <li>
+    <p>Create a new database</p>
+  </li>
+  <li>
+    <p>Create a new table in the database.</p>
+  </li>
+  <li>
+    <p>Click on the created database to construct an SQL query:</p>
+  </li>
+</ol>
+
+<p>[SELECT “&lt;?php system($_GET[‘cmd’]); ?&gt;” into outfile “/var/www/html/backdoor.php”]</p>
+
+<ol>
+  <li>Visit target/backdoor.php and provide a cmd as a GET parameter.</li>
+</ol>
+
+<p>This <a href="https://www.hackingarticles.in/shell-uploading-web-server-phpmyadmin/">post</a> in hackingaritcles.in describes the above steps in a more detailed manner.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/8.png" alt="new database" /></p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/3.png" alt="new table" /></p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/4.png" alt="shell1" /></p>
+
+<p>Based on the error message, it seems that we do not have enough permissions to write to /var/www/html. This is where a good enumeration comes in handy. Since Gobuster returned that uploads is a valid directory; let’s see if we can upload our PHP code there.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/5.png" alt="reverse shell in uploads" /></p>
+
+<p>Great. The command executed successfully. Let’s see if we have code execution.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/6.png" alt="command execution" /></p>
+
+<p>Awesome. You can now execute a reverse shell one liner. Check the <a href="http://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet">reverse shell cheatsheet</a> posted by pentestmonkey.</p>
+
+<h4 id="2nd-method-to-obtain-root">2nd method to obtain root</h4>
+
+<p>Under Seth database, we find user ramses base64 encoded password. The decoded output is an MD5 hash based on the characters count. We search for the password in <a href="https://crackstation.net/">Crackstation</a>; a free password hash cracker.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/7.png" alt="passwords" /></p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/9.png" alt="base64 decode" /></p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/10.png" alt="counts" /></p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/11.png" alt="crackstation" /></p>
+
+<p>User’s Ramses password is omega. Great. Now we can connect to the target as this user.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/12.png" alt="ssh as ramses" /></p>
+
+<h2 id="privilege-escalation">Privilege Escalation</h2>
+
+<p>We can read user’s Ramses bash history.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/13.png" alt="history file" /></p>
+
+<p>There seems to be an interesting binary under /var/www/backup. Let’s check it.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/14.png" alt="proc watch suid" /></p>
+
+<p>The program has the suid bit. Excellent. Let’s understand what it does by executing it.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/15.png" alt="executing ps" /></p>
+
+<p>Once we run it, we see that it execute ps binary.</p>
+
+<div class="panel panel-info">
+      <div class="panel-heading">
+        <h3 class="panel-title">Tip:</h3>
+      </div>
+      <div class="panel-body">
+  If a binary does not return any data and you'd like to know what it does exactly, before resulting to reverse engineering, run <a href="https://github.com/DominicBreuker/pspy">pspy</a> in the background and then run the binary. It should give you a solid idea of what is going on.  
+      </div>
+    </div>
+
+<p>Since the user did not indicate a full path to ps binary (/usr/bin/ps); We can exploit this to our advantage by putting a malicious executable in /tmp named ps and modifying the PATH variable to include /tmp. Therefore, the next time we will run Procyon, it will search for the ps binary in the /tmp folder as indicated by the PATH variable and execute our exploit as root.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">$</span><span class="nb">echo</span> /bin/sh <span class="o">&gt;</span>ps
+<span class="gp">$</span><span class="nb">chmod</span> +x ps
+<span class="gp">$</span>/var/www/backup/procwatch
+</code></pre></div></div>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/16.png" alt="root1" /></p>
+
+<p>We can also create a reverse shell with Metasploit and name it ps. You will need to add PrependSetuid=True otherwise it will not execute with root privileges.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/17.png" alt="msfvenom payload" /></p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/18.png" alt="uploading to tmp" /></p>
+
+<p>Now we need to modify the path variable to include the /tmp directory.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">$</span><span class="nv">PATH</span><span class="o">=</span>/tmp:<span class="nv">$PATH</span>
+</code></pre></div></div>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/20.png" alt="path update" /></p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/19.png" alt="reverse shell" /></p>
+
+<p>Now we have root shell. Awesome :) Let’s read the flag.</p>
+
+<p><img src="../assets/img/Walkthroughs/NullByte/21.png" alt="flag" /></p>
+
+
+        </div>
+        <div class="col-sm-2">
+          <div class="pane-separator hidden-xs" style="margin-bottom:30em;"></div>
+          <div class="pane-separator visible-xs" style="margin-bottom:5em;"></div>
+          <div class="right-pane" style="margin-left: 1em;">
+            
+              <div class="avatar">
+                <center>
+                  
+                    <img src="/assets/img/avatar.jpg" alt="me" class="avatar-image">
+                  
+                  
+                    <p class="avatar-description"></p>
+                  
+                  <div class="right-links">
+                    
+<a href="https://github.com/neskortas" target="_blank">
+  <i class="fa fa-github fa-3x"></i>
+</a>
+
+
+<a href="mailto:nesrinekortasblog@gmail.com">
+  <i class="fa fa-envelope fa-3x"></i>
+</a>
+
+
+
+
+<a href="https://www.linkedin.com/in/nesrine-kortas" target="_blank">
+  <i class="fa fa-linkedin fa-3x"></i>
+</a>
+
+
+                  </div>
+                </center>
+              </div>
+            
+            
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="footer">
+      <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="1894.4">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 12.0px Times; color: #000000; -webkit-text-stroke: #000000}
+    span.s1 {font-kerning: none}
+  </style>
+</head>
+<body>
+<p class="p1"><span class="s1"></span></p>
+<p class="p1"><span class="s1">
+<a href="https://github.com/neskortas" target="_blank">
+  <i class="fa fa-github fa-3x"></i>
+</a>
+
+
+<a href="mailto:nesrinekortasblog@gmail.com">
+  <i class="fa fa-envelope fa-3x"></i>
+</a>
+
+
+
+
+<a href="https://www.linkedin.com/in/nesrine-kortas" target="_blank">
+  <i class="fa fa-linkedin fa-3x"></i>
+</a>
+
+<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"></span></p>
+<p class="p1"><span class="s1">Copyright (c) 2020 Nesrine kortas<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span></span></p>
+</body>
+</html>
+
+    </section>
+  </div>
+</body>
+
+</html>

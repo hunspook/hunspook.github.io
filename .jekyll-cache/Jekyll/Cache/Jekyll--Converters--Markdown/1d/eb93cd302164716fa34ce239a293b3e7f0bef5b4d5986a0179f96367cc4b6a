@@ -1,0 +1,197 @@
+I"�'<h2 id="vm-description">VM Description</h2>
+
+<p>This CTF is based on the show, Mr. Robot. It has three keys hidden in different locations. The goal is to find all three. Each key is progressively difficult to find.</p>
+
+<p>The VM isn’t too difficult and is similar to machines you might find in the OSCP labs. There isn’t any advanced exploitation or reverse engineering. The level is considered beginner-intermediate.</p>
+
+<p>Download: <a href="https://www.vulnhub.com/entry/mr-robot-1,151/">Mr. Robot</a></p>
+
+<p>Author: <a href="https://www.vulnhub.com/author/leon-johnson,292/">Leon Johnson</a></p>
+
+<h2 id="enumeration">Enumeration</h2>
+
+<p>Mr. Robot VM is hosted locally using VMware. In order to find its assigned IP, we can either use <em>netdiscover</em> or <em>arp-scan</em>.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">root@Nes:~/vulnhub/mrRobot#</span><span class="w"> </span>arp-scan <span class="nt">-I</span> wlan0 <span class="nt">-l</span>
+<span class="go">Interface: wlan0, type: EN10MB, MAC: 1c:4d:70:0d:61:46, IPv4: 192.168.1.83
+Starting arp-scan 1.9.7 with 256 hosts (https://github.com/royhills/arp-scan)
+192.168.1.22    1c:4d:70:0d:61:46       Intel Corporate
+
+16 packets received by filter, 0 packets dropped by kernel
+Ending arp-scan 1.9.7: 256 hosts scanned in 2.379 seconds (107.61 hosts/sec). 4 responded
+</span></code></pre></div></div>
+
+<p>As always, a pen testing task starts with a proper enumeration. The goal is to find as much information about the target as possible.</p>
+
+<h3 id="service-enumeration">Service Enumeration</h3>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">root@Nes:~/vulnhub/mrRobot#</span><span class="w"> </span>nmap <span class="nt">-sV</span> <span class="nt">-sC</span> <span class="nt">-p-</span> <span class="nt">-oA</span> nmap/nmap 192.168.1.22
+<span class="go">
+Starting Nmap 7.60 ( https://nmap.org ) at 2020-08-04 12:53 EDT
+Nmap scan report for linux (192.168.1.22)
+Host is up (0.00066s latency).
+Not shown: 65532 filtered ports
+PORT    STATE  SERVICE  VERSION
+22/tcp  closed ssh
+80/tcp  open   http     Apache httpd
+|_http-server-header: Apache
+|_http-title: Site doesn't have a title (text/html).
+443/tcp open   ssl/http Apache httpd
+|_http-server-header: Apache
+|_http-title: Site doesn't have a title (text/html).
+| ssl-cert: Subject: commonName=www.example.com
+| Not valid before: 2015-09-16T10:45:03
+|_Not valid after:  2025-09-13T10:45:03
+MAC Address: 1C:4D:70:0D:61:46 (Intel Corporate)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 118.34 seconds
+</span></code></pre></div></div>
+
+<p>Since Apache HTTPD seems to be running on ports 80 and 443, let’s use Gobuster to find interesting files and directories.</p>
+
+<h4 id="web-server-directory-enumeration">Web Server Directory Enumeration</h4>
+
+<p>We can use Gobuster to enumerate the different directories and files on both ports.</p>
+
+<div class="language-console highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gp">root@Nes:~/vulnhub/mrRobot#</span><span class="w"> </span>gobuster <span class="nb">dir</span> <span class="nt">-u</span> http://192.168.1.22 <span class="nt">-w</span> /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt <span class="nt">-x</span> .php,.txt <span class="nt">-o</span> dirbuster.out
+<span class="go">===============================================================
+Gobuster v3.0.1
+by OJ Reeves (@TheColonial) &amp; Christian Mehlmauer (@_FireFart_)
+===============================================================
+[+] Url:            http://192.168.1.22
+[+] Threads:        10
+[+] Wordlist:       /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+[+] Status codes:   200,204,301,302,307,401,403
+[+] User Agent:     gobuster/3.0.1
+[+] Extensions:     php,txt
+[+] Timeout:        10s
+===============================================================
+2020/08/04 12:54:30 Starting gobuster
+===============================================================
+/images (Status: 301)
+/index.php (Status: 301)
+/blog (Status: 301)
+/rss (Status: 301)
+/sitemap (Status: 200)
+/login (Status: 302)
+/0 (Status: 301)
+/feed (Status: 301)
+/video (Status: 301)
+/image (Status: 301)
+/atom (Status: 301)
+/wp-content (Status: 301)
+/admin (Status: 301)
+/audio (Status: 301)
+/intro (Status: 200)
+/wp-login (Status: 200)
+/wp-login.php (Status: 200)
+/css (Status: 301)
+/rss2 (Status: 301)
+/license (Status: 200)
+/license.txt (Status: 200)
+/wp-includes (Status: 301)
+/js (Status: 301)
+/wp-register.php (Status: 301)
+/Image (Status: 301)
+/wp-rss2.php (Status: 301)
+/rdf (Status: 301)
+/page1 (Status: 301)
+/readme (Status: 200)
+/robots (Status: 200)
+/robots.txt (Status: 200)
+/dashboard (Status: 302)
+</span></code></pre></div></div>
+
+<p>Gobuster returns multiple files including robots.txt and wp-admin.
+We now know that wordpress is running on the host.</p>
+
+<div class="panel panel-info">
+      <div class="panel-heading">
+        <h3 class="panel-title">Tip:</h3>
+      </div>
+      <div class="panel-body">
+   A robots.txt file tells search engine crawlers which pages or files the crawler can or can't request from the site.The presence of this file in itself is not a security issue; However, it is often used to identify private directories. If the web server's admin relies on robots.txt to restrict access to these directories then this is a security issue. This is why, it is always a good idea to check if robots.txt exists on the web server.
+      </div>
+    </div>
+
+<p>In this case, robots.txt indicates the presence of the first key as well as fsocity.dic; a wordlist which will be useful if we decide to conduct a brute force attack.</p>
+
+<p><img src="../assets/img/Walkthroughs/robot/robots.png" alt="robots.txt" /></p>
+
+<p><img src="../assets/img/Walkthroughs/robot/1st key.png" alt="1st key" /></p>
+
+<h4 id="identifying-valid-wordpress-credentials">Identifying valid WordPress credentials</h4>
+
+<p>Based on the error message returned when attempting to authenticate to wordpress; we can enumerate valid usernames. In fact, if the username is not valid we get <strong><em>Error: Invalid username</em></strong> whereas we get <strong><em>The password you entered for the username x is invalid</em></strong> if x is a valid user. This is known in the industry as <a href="https://cwe.mitre.org/data/definitions/204.html">CWE-204: Observable Response Discrepancy</a></p>
+
+<p>We use the wordlist we just found to enumerate valid credentials. We will need to remove the duplicates from the list for faster results.</p>
+
+<p>We decided to use Burp Intruder to enumerate valid users and Hydra to brute force the user’s password. Once we launch the Intruder, we can determine if the username is valid or not based on the output length as the error messages are different.</p>
+
+<p><img src="../assets/img/Walkthroughs/robot/Identifying valid usernames for WP.png" alt="Valid username" /></p>
+
+<p>Now that we know Elliot is a valid username, let’s brute force his password.</p>
+
+<p><img src="../assets/img/Walkthroughs/robot/Password brute force for user elliot.png" alt="Valid username" /></p>
+
+<h2 id="exploit">Exploit</h2>
+
+<p>Once we have valid credentials to WordPress, we can obtain a reverse shell by either:</p>
+
+<ol>
+  <li>
+    <p>Inserting PHP code into an editable theme.</p>
+  </li>
+  <li>
+    <p>Uploading a malicious plugin.</p>
+  </li>
+</ol>
+
+<p>This <a href="https://www.hackingarticles.in/wordpress-reverse-shell/">post</a> by Raj Chandel details how to do that.</p>
+
+<p>Since a collection of Web shells is already provided on Kali, we insert a php reverse shell located under /usr/share/webshells/php/php-reverse-shell.php into the twenty-fifteen theme. If you are not running Kali, you can find the shell <a href="https://github.com/pentestmonkey/php-reverse-shell">here</a></p>
+
+<p><img src="../assets/img/Walkthroughs/robot/Uploading reverse shell.png" alt="Valid username" /></p>
+
+<p>Once we insert our reverse shell, we set up a Netcat listener and visit the shell’s location in order to execute it.</p>
+
+<p><img src="../assets/img/Walkthroughs/robot/netcat.png" alt="Valid username" /></p>
+
+<p><img src="../assets/img/Walkthroughs/robot/netcat1.png" alt="Valid username" /></p>
+
+<p>The first thing we do is upgrade our simple reverse shell to a fully interactive TTY.
+We use the python pty module as described <a href="https://blog.ropnop.com/upgrading-simple-shells-to-fully-interactive-ttys/">here</a></p>
+
+<h2 id="privilege-escalation">Privilege Escalation</h2>
+
+<h3 id="escalating-to-user-robot">Escalating to user Robot</h3>
+
+<p>Under Robot home directory, we find a password file (password.raw-md5) containing the MD5 hash of the user’s password. We use <a href="https://crackstation.net/">CrackStation</a> in order to crack it.</p>
+
+<p><img src="../assets/img/Walkthroughs/robot/password.png" alt="Valid username" /></p>
+
+<p><img src="../assets/img/Walkthroughs/robot/md5.png" alt="Valid username" /></p>
+
+<p>Robot password is abcdefghijklmnopqrstuvwyz.</p>
+
+<p><img src="../assets/img/Walkthroughs/robot/Escalating to robot.png" alt="Valid username" /></p>
+
+<p>We can now read the 2nd key.</p>
+
+<p><img src="../assets/img/Walkthroughs/robot/2nd key.png" alt="Valid username" /></p>
+
+<h4 id="escalating-to-root">Escalating to root</h4>
+
+<p>We run the the automated script <a href="https://github.com/rebootuser/LinEnum/blob/master/LinEnum.sh">LinEnum.sh</a> to enumerate the target.</p>
+
+<p>The script returns that nmap has the SUID bit.</p>
+
+<p>The interactive mode in nmap, available on versions 2.02 to 5.21 allows us to execute shell commands. We can leverage this to become root. If you did not know that, you can check <a href="https://gtfobins.github.io/gtfobins/nmap/">gtfobins.</a></p>
+
+<p><img src="../assets/img/Walkthroughs/robot/Privilege Escalation using nmap.png" alt="Valid username" /></p>
+
+<p>We are now root and we obtain the 3rd and final key. Awesome!</p>
+
+<p><img src="../assets/img/Walkthroughs/robot/3rd key.png" alt="3rd key" /></p>
+:ET

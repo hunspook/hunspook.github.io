@@ -1,0 +1,162 @@
+I"9<h2 id="vm-description">VM Description</h2>
+
+<p>This CTF was developed in order to prepare for the OSCP. It has 2 flags: user.txt and proof.txt which we need to collect.</p>
+
+<p>Download: <a href="https://www.vulnhub.com/entry/photographer-1,519/">Photographer</a></p>
+
+<p>Author: <a href="http://v1n1v131r4.com/">v1n1v131r4</a></p>
+
+<h2 id="enumeration">Enumeration</h2>
+
+<p>We configure the VM in bridge mode. In order to determine its assigned IP, we run the below command:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$arp</span><span class="nt">-scan</span> <span class="nt">-I</span> wlan0 <span class="nt">-l</span> 
+</code></pre></div></div>
+
+<h4 id="service-enumeration">Service Enumeration</h4>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$nmap</span> <span class="nt">-sV</span> <span class="nt">-sC</span> <span class="nt">-p-</span> <span class="nt">-oA</span> nmap/nmap 192.168.1.7
+</code></pre></div></div>
+
+<div class="row">
+  <div class="col-md-6">
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Open port</th>
+          <th>Service</th>
+          <th>Version</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>80</td>
+          <td> http </td>
+          <td>Apache Httpd 2.4.18</td>
+        
+        </tr>
+        <tr>
+         <td> 139 </td>
+          <td> Netbios-ssn </td>
+          <td> Samba 3.X - 4.X</td>
+        </tr>
+
+ 	<tr>
+         <td> 445 </td>
+          <td> Netbios-ssn </td>
+          <td> Samba 4.3.11</td>
+        </tr>
+
+	 <tr>
+         <td> 8000 </td>
+          <td> http</td>
+          <td> Koken 0.22.24</td>
+        </tr>
+
+       </tbody>
+    </table>
+  </div>
+</div>
+
+<p><img src="../assets/img/Walkthroughs/Photographer/1.png" alt="nmap" /></p>
+
+<h4 id="web-server-directory-enumeration">Web Server Directory Enumeration</h4>
+
+<p>Since I did not encounter Koken during a pentest before, I started looking for known vulnerabilities in Koken version 0.22.24. The first search result is a an authenticated file upload vulnerability. There is also a <a href="https://www.exploit-db.com/exploits/48706">PoC in exploit-db</a> published by the VM author himself.</p>
+
+<p>I think we can be pretty confident this is the way to go. Still, let’s run Nikto scan against port 8000; because why not?</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$nikto</span> <span class="nt">-host</span> 192.168.1.7:8000
+</code></pre></div></div>
+
+<p><img src="../assets/img/Walkthroughs/Photographer/2.png" alt="nikto" /></p>
+
+<p>Nikto finds an admin login page. We can try to login using admin:admin but the application returns an error as it expects an email address.</p>
+
+<p>Since the username needs to be an email, there is no point in doing a brute force attack. Let’s check other ports, maybe we can find the credentials somewhere.</p>
+
+<h4 id="samba-enumeration">Samba enumeration</h4>
+
+<p>I like to start enumerating samba service using <a href="https://tools.kali.org/information-gathering/smbmap">smbmap</a> tool. This is because it outputs right away the shares we have access to and recursively displays their contents (using -R) which gives you a pretty  good idea of where to look next.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$smbmap</span> <span class="nt">-H</span> 192.168.1.7 <span class="nt">-R</span> 
+</code></pre></div></div>
+
+<p><img src="../assets/img/Walkthroughs/Photographer/3.png" alt="smbmap" /></p>
+
+<p>Under the share <em>sambashare</em> there are 2 interesting files: mailsent.txt and wordpress.bkp.zip. Let’s download both and read their contents.</p>
+
+<p><em>Note:</em> To download the files you can use <em>get filename</em> or <em>mget</em> via <a href="https://www.samba.org/samba/docs/current/man-html/smbclient.1.html">smbclient</a>:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$smbclient</span> //192.168.1.7/sambashare
+</code></pre></div></div>
+
+<p><img src="../assets/img/Walkthroughs/Photographer/4.png" alt="mailsent" /></p>
+
+<p>Let’s try to login to Koken using daisa@photographer.com as username and babygirl as password.</p>
+
+<p><img src="../assets/img/Walkthroughs/Photographer/5.png" alt="Koken login" /></p>
+
+<p>The login is successful. That was easy enough…Nice.</p>
+
+<p>As for the wordpress folder, we look for wp-config.php as it contains the administrator’s password but it’s not there. We can leave it for now as we did not see wordpress running (perhaps on port 80?). Moreover, we do have a solid idea of what to do in order to have a reverse shell on the target so let’s move on.</p>
+
+<p><img src="../assets/img/Walkthroughs/Photographer/6.png" alt="wordpress" /></p>
+
+<h2 id="exploit">Exploit</h2>
+
+<p>We follow the steps described in the <a href="https://www.exploit-db.com/exploits/48706">PoC</a> in order to have a reverse shell:</p>
+
+<ol>
+  <li>
+    <p>Create a malicious PHP file (Already provided in Kali under /usr/share/webshells/php/php-reverse-shell.php). We simply need to modify the IP address with ours.</p>
+  </li>
+  <li>
+    <p>Save the file as php-reverse-shell.php.img to bypass the filter.</p>
+  </li>
+  <li>
+    <p>Upload the file under Import content button and intercept the request with Burp.</p>
+  </li>
+</ol>
+
+<p><img src="../assets/img/Walkthroughs/Photographer/7.png" alt="Burp" /></p>
+
+<ol>
+  <li>Modify the file name from php-reverse-shell.php.img to php-reverse-shell.php.</li>
+</ol>
+
+<p><img src="../assets/img/Walkthroughs/Photographer/8.png" alt="modifying file name" /></p>
+
+<ol>
+  <li>Set up a Netcat listener and go to the file location (We click on Download file to see the location).</li>
+</ol>
+
+<p><img src="../assets/img/Walkthroughs/Photographer/9.png" alt="Reverse shell" /></p>
+
+<p>Great, now we have a reverse shell as www-data. We can upgrade it to a fully interactive TTY using the Python pty module as described <a href="https://blog.ropnop.com/upgrading-simple-shells-to-fully-interactive-ttys/">here</a>.</p>
+
+<p>We can also read the user’s key.</p>
+
+<p><img src="../assets/img/Walkthroughs/Photographer/10.png" alt="User's key" /></p>
+
+<h2 id="privilege-escalation">Privilege Escalation</h2>
+
+<p>We run the <a href="https://github.com/rebootuser/LinEnum">LinEnum.sh</a> automated script to look for attack vectors to escalate to root.</p>
+
+<p>It seems interesting to escalate to Daisa as she is in the sudo group. The password we already found may also work. 
+Let’s take note and try this path later if we don’t have better ideas.</p>
+
+<p><img src="../assets/img/Walkthroughs/Photographer/11.png" alt="Daisa" /></p>
+
+<p>Fortunately, we found a more interesting attack vector. In fact, php7.2 is suid meaning that we can have the effective user id of root. If you did not know already, <a href="https://gtfobins.github.io/">GTFOBins</a> collects legitimate functions of Unix binaries that can be abused to escalate privileges. Let’s see if there is anything about php being suid.</p>
+
+<p>As expected, there are [detailed steps] on how to escalate privileges in this case. Let’s follow them and become root :)</p>
+
+<p><img src="../assets/img/Walkthroughs/Photographer/12.png" alt="suid" /></p>
+
+<p>Great. Now let’s read the flag.</p>
+
+<p><img src="../assets/img/Walkthroughs/Photographer/13.png" alt="root flag" /></p>
+
+<p>Over-all, this was an easy and straightforward machine. Based on the enumeration, there might be other ways to get user and root.</p>
+:ET
