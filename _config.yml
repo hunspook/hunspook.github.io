@@ -32,7 +32,7 @@ twitter_username: "hunspook"
 # Theme
 theme: jekyll-theme-potato-hacker                 # Uncomment this
 # remote_theme: luxedo/jekyll-theme-potato-hacker   # Or this
-theme_repository: "https://github.com/neskortas/neskortas.github.io"
+theme_repository: "https://github.com/hunspook/hunspook.github.io"
 theme_base: "dark"       # Theme palette (light | dark)
 theme_switch: off         # Show color switch (on | off)
 
