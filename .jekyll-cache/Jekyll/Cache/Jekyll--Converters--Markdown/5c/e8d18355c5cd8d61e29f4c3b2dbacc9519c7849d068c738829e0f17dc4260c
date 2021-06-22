@@ -1,0 +1,178 @@
+I"�,<h2 id="requisitos">Requisitos</h2>
+
+<p>· Tener una terminal de Linux  <br />
+· Conexión a internet  <br />
+· NerdFonts</p>
+
+<h2 id="recursos">Recursos</h2>
+
+<p>PowerLevel10k: <a href="https://github.com/romkatv/powerlevel10k">PowerLevel10kGitHub</a>
+NerdFonts: <a href="https://www.nerdfonts.com/font-downloads">NerdFonts</a></p>
+
+<h2 id="procedimiento">Procedimiento</h2>
+
+<h3 id="zsh">ZSH</h3>
+<p>En este caso voy a personalizar la terminal que viene con Parrot Security, pero también es válido para otras distribuciones de Linux. Antes de empezar debemos comprobar que tengamos instalado ZSH. <br />
+Para comprobar si está instalado en el sistema ejecutaremos el siguiente comando.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌─[hunspook@debian]─[~]
+└──╼ <span class="nv">$zsh</span> <span class="nt">--version</span>
+zsh 5.8 <span class="o">(</span>x86_64-debian-linux-gnu<span class="o">)</span>
+</code></pre></div></div>
+<p>Si nos da un resultado es porque lo tenemos instalado, en caso contrario lo tendrían que instalar con <code class="language-plaintext highlighter-rouge">apt install zsh</code> y comprabamos que se haya instalado con el comando de la parte superior (<code class="language-plaintext highlighter-rouge">zsh --version</code>).</p>
+
+<p>Una vez instalado ZSH lo que haremos será definirla como nuestra SHELL por defecto, haremos el cambio estando como <code class="language-plaintext highlighter-rouge">superusuario</code>.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌─[root@debian]─[/home/hunspook]
+└──╼ usermod <span class="nt">-s</span> /usr/bin/zsh hunspook
+<span class="c"># Deben reemplazar "hunspook" por su nombre de usuario.</span>
+</code></pre></div></div>
+<p>Para ver los cambos que se realizaron, cerraremos la sesión e ingresaremos nuevamente y la hora de abrir una terminal ya veríamos ZSH como nuestra shell.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center"><img src="../assets/img/Customize/zsh_powerlevel10k/bash.png" alt="Antes" /></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center"><em>Antes</em></td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center"><img src="../assets/img/Customize/zsh_powerlevel10k/zsh.png" alt="Ahora" /></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center"><em>Después</em></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Al estar usando Parrot Security los diseños son diferentes, pero para comprobar que se hicieron los cambios correctamente podemos ejecutar el siguiente comando.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌[debian]─[11:43-22/06]─[/home/hunspook]
+└╼ hunspook<span class="nv">$echo</span> <span class="nv">$SHELL</span>
+/usr/bin/zsh
+</code></pre></div></div>
+<p>Y esto nos devolverá la SHELL que estamos usando.</p>
+
+<h3 id="powerlevel10k">PowerLevel10k</h3>
+
+<p>Una vez realizado los pasos anteriores pasaremos a instalar PowerLevel10k para nuestra ZSH. Para eso ingresaremos al link que está en la parte de recursos y bajaremos hasta la parte de instalación manual.</p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/instalacion.png" alt="Instalacion" /></p>
+
+<p>Y copiaremos los comandos en nuestra terminal. Esto lo podemos hacer tanto como para nuestro <code class="language-plaintext highlighter-rouge">usuario personal</code> como para <code class="language-plaintext highlighter-rouge">root</code>. Pero para eso debemos tener ya definida <code class="language-plaintext highlighter-rouge">ZSH</code> por defecto para nuestro <code class="language-plaintext highlighter-rouge">usuario personal</code> y para el usuario <code class="language-plaintext highlighter-rouge">root</code>. En este caso lo estoy haciendo para mi usuario personal.  <br />
+Primero clonamos el repositorio y luego copiamos y ejecutamos el siguiente comando.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌[debian]─[11:59-22/06]─[/home/hunspook]
+└╼hunspook<span class="nv">$git</span> clone <span class="nt">--depth</span><span class="o">=</span>1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+Clonando en <span class="s1">'/home/hunspook/powerlevel10k'</span>...
+remote: Enumerating objects: 92, <span class="k">done</span><span class="nb">.</span>
+remote: Counting objects: 100% <span class="o">(</span>92/92<span class="o">)</span>, <span class="k">done</span><span class="nb">.</span>
+remote: Compressing objects: 100% <span class="o">(</span>78/78<span class="o">)</span>, <span class="k">done</span><span class="nb">.</span>
+remote: Total 92 <span class="o">(</span>delta 16<span class="o">)</span>, reused 54 <span class="o">(</span>delta 10<span class="o">)</span>, pack-reused 0
+Recibiendo objetos: 100% <span class="o">(</span>92/92<span class="o">)</span>, 352.97 KiB | 605.00 KiB/s, listo.
+Resolviendo deltas: 100% <span class="o">(</span>16/16<span class="o">)</span>, listo.
+
+┌[debian]─[12:18-22/06]─[/home/hunspook]
+└╼hunspook<span class="nv">$echo</span> <span class="s1">'source ~/powerlevel10k/powerlevel10k.zsh-theme'</span> <span class="o">&gt;&gt;</span>~/.zshrc
+</code></pre></div></div>
+<p>Luego de haber ejecutado ambos comandos y teclearemos <code class="language-plaintext highlighter-rouge">zsh</code> en la terminal y le daremos a <code class="language-plaintext highlighter-rouge">enter</code> para empezar con la configuración de PowerLevel10k. Para ir configurando solo tendremos que teclear la tecla que nos aparece como opción.</p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/primero.png" alt="Primero" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/segundo.png" alt="Segundo" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/tercero.png" alt="Tercero" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/cuarto.png" alt="Cuarto" /></p>
+
+<p>Si ven los iconos y en la cuarta imagen los iconos no están uno encima del otro pueden continuar los 4 pasos tecleando la letra <code class="language-plaintext highlighter-rouge">y</code>. <br />
+En caso contrario necesitaremos instalar las NerdFonts, para ello nos dirigimos nuevamente a la parte de recursos y abrimos la página de NerdFonts pero primero cerraremos la configuración con la tecla <code class="language-plaintext highlighter-rouge">q</code>.</p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/paginanerd.png" alt="NerdPagina" /></p>
+
+<p>En este caso descargaré <code class="language-plaintext highlighter-rouge">Anonymice Nerd Font</code>.</p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/anonfont.png" alt="AnonFont" /></p>
+
+<p>Para instalar la fuente debemos estar como <code class="language-plaintext highlighter-rouge">super usuario</code>, y nos situamos en la ruta <code class="language-plaintext highlighter-rouge">/usr/share/local/fonts</code></p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌[debian]─[12:39-22/06]─[/usr/local/share/fonts]
+└╼root<span class="nv">$cd</span> /usr/local/share/fonts/
+</code></pre></div></div>
+<p>donde moveremos el archivo <code class="language-plaintext highlighter-rouge">.zip</code> que descargamos, recuerden cambiar <code class="language-plaintext highlighter-rouge">hunspook</code> por su usuario.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌[debian]─[12:41-22/06]─[/usr/local/share/fonts]
+└╼root<span class="nv">$mv</span> /home/hunspook/Descargas/AnonymousPro.zip <span class="nb">.</span>
+</code></pre></div></div>
+<p>Una vez con el archivo en la ruta actual, lo descomprimimos con…</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌[debian]─[12:42-22/06]─[/usr/local/share/fonts]
+└╼root<span class="nv">$unzip</span> AnonymousPro.zip
+</code></pre></div></div>
+<p>y seguidamente eliminamos el archivo <code class="language-plaintext highlighter-rouge">.zip</code>.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌[debian]─[12:42-22/06]─[/usr/local/share/fonts]
+└╼root<span class="nv">$rm</span> AnonymousPro.zip
+</code></pre></div></div>
+<p>Les recomiendo cerrar sesión y volver a entrar para asegurarnos de que carguen las fuentes. Si entran a su terminal y les aparece la configuración de PowerLevel10k igual pueden seguir los siguientes pasos.   <br />
+Ahora cambiaremos el tipo de fuente dando <code class="language-plaintext highlighter-rouge">click derecho</code> y entrando a perfil y luego preferencias del perfil.</p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/preferencias.png" alt="Preferencias" /></p>
+
+<p>Desmarcamos <code class="language-plaintext highlighter-rouge">Usar la tipografía de ancho fijo del sistema</code>y en tipografía buscamos el nombre de la fuente que acabamos de descargar y la seleccionamos.</p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/seleccionfont.png" alt="NuevaFuente" /></p>
+
+<p>Una vez seleccionado entraremos a otra terminal o si ya están en la configuración continuaremos con los pasos de configuración de PowerLevel10k como vimo en la parte superior.   <br />
+Una vez lleguemos a este apartado cada uno tendrá que seleccionar la configuración que más le guste.</p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/configurando.png" alt="Configurando" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/configurando2.png" alt="Configurando2" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/configurando3.png" alt="Configurando3" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/configurando4.png" alt="Configurando4" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/configurando5.png" alt="Configurando5" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/configurando6.png" alt="Configurando6" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/configurando7.png" alt="Configurando7" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/configurando8.png" alt="Configurando8" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/configurando9.png" alt="Configurando9" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/configurando10.png" alt="Configurando10" /></p>
+
+<h2 id="mi-configuración">Mi configuración</h2>
+
+<p>· Prompt Style              -&gt; 2   <br />
+· Character Set             -&gt; 2   <br />
+· Prompt Color              -&gt; 4   <br />
+· Show current time?        -&gt; 1   <br />
+· Prompt Height             -&gt; 1   <br />
+· Prompt Spacing            -&gt; 2   <br />
+· Prompt Flow               -&gt; 1   <br />
+· Enable Transient Prompt?  -&gt; n    <br />
+· Instant Prompt Mode       -&gt; 1   <br />
+· Apply changes to ~/.zshrc -&gt; y</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center"><img src="../assets/img/Customize/zsh_powerlevel10k/resultado.png" alt="Resultado" /></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center"><em>Mi Configuración</em></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>** Espero que le haya sido de ayuda Z) **</p>
+:ET

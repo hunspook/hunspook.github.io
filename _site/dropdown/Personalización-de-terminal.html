@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Personalización De Terminal</title>
+  <meta name="description" content="Personalizando terminal de Linux con ZSH y PowerLevel10k.">
+
+  <!-- Social: Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@hunspook">
+  <meta name="twitter:title" content="Personalización De Terminal">
+  <meta name="twitter:description" content="Personalizando terminal de Linux con ZSH y PowerLevel10k.">
+  
+  <meta property="twitter:image:src" content="https://hunspook.github.io/assets/img/opengraph.png">
+  
+
+  <!-- Social: Facebook / Open Graph -->
+  <meta property="og:url" content="https://hunspook.github.io/dropdown/Personalizaci%C3%B3n-de-terminal.html">
+  <meta property="og:title" content="Personalización De Terminal">
+  
+  <meta property="og:image" content="https://hunspook.github.io/assets/img/opengraph.png">
+  
+  <meta property="og:description" content="Personalizando terminal de Linux con ZSH y PowerLevel10k.">
+  <meta property="og:site_name" content="HunSpook">
+
+  <!-- Social: Schema.org  -->
+  <meta itemprop="name" content="Personalización De Terminal"/>
+  <meta itemprop="description" content="Personalizando terminal de Linux con ZSH y PowerLevel10k.">
+  <meta itemprop="image" content="https://hunspook.github.io/assets/img/opengraph.png"/>
+
+  <!-- Favicon -->
+  <link rel="shortcut icon" href="/assets/img/icons/favicon.ico" type="image/x-icon" />
+
+  <!-- Android Lolipop Theme Color -->
+  <meta name="theme-color" content="#2a4d14">
+
+  <!-- Styles -->
+  <link rel="stylesheet" id="css-theme" href="/assets/css/main-dark.css">
+  <link rel="stylesheet" href="/assets/css/highlight/gruvbox.css">
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css">
+  <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet">
+
+  <!-- Javascript -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.3.0/d3.min.js"></script>
+  <script type="text/javascript" src="/assets/js/main.js"></script>
+</head>
+
+
+<body class="animated fadeIn">
+  <div class="container">
+    <div id="background-div">
+      <svg id="background-svg">
+        <lineargradient id="Gradient1" x1="0" x2="0" y1="0" y2="1">
+          <stop stop-opacity="0" class="bgColor2" offset="0%" />
+          <stop stop-opacity="0.5" class="bgColor2" offset="10%" />
+          <stop stop-opacity="0.5" class="bgColor1" offset="40%" />
+          <stop stop-opacity="0" class="bgColor1" offset="100%" />
+        </lineargradient>
+        <g id="bg-layer1"></g>
+        <g id="bg-layer2" class="hide"></g>
+        <g id="bg-layer3"></g>
+        <g id="bg-layer4"></g>
+      </svg>
+    </div>
+    <section class="header">
+      <header>
+  <div class="row">
+    <div class="col-xs-12">
+      <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container">
+          <div class="navbar-header">
+            <a class="navbar-toggle collapsed navbar-icon" data-toggle="collapse"
+              data-target="#bs-example-navbar-collapse-1">
+              <i class="fa fa-bars fa-2x"></i>
+            </a>
+            <a class="navbar-brand navbar-icon" href="/">
+                <i class="fa fa-home fa-2x"></i>
+            </a>
+          </div>
+
+          <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+              <li><a href="/">Home</a></li>
+              
+
+              
+                <li class="dropdown dropdown-Personalización">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+                    role="button" aria-haspopup="true" aria-expanded="false">Personalización
+                    <span class="caret"></span>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-Personalización De Terminal">
+                    <li priority="1"><a href="/dropdown/Personalizaci%C3%B3n-de-terminal.html">Personalización De Terminal</a></li>
+                  </ul>
+                </li>
+              
+                <li class="dropdown dropdown-Pentesting">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+                    role="button" aria-haspopup="true" aria-expanded="false">Pentesting
+                    <span class="caret"></span>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-Pronto Pentesting">
+                    <li priority="1"><a href="/dropdown/Pronto-pentesting.html">Pronto Pentesting</a></li>
+                  </ul>
+                </li>
+              
+              
+
+              <script>
+                // clean repeated dropdowns and add <li> to their positions
+                let done = [];
+                let elements = [];
+                $(".dropdown")
+                  //
+                  .each((index0 , value0) => {
+                    let dropdownClass = "."+$(value0)[0].classList[1];
+                    if (done.indexOf(dropdownClass) !== -1) return
+                    done.push(dropdownClass)
+                    let dropdownMain = $(dropdownClass)[0]
+                    let itemsList = $(dropdownClass+">ul>li").sort((a, b) => parseInt(b.getAttribute("priority") || -9999999) - parseInt(a.getAttribute("priority") || -9999999))
+                    $(dropdownClass+">ul>li").remove();
+                    $(dropdownClass+">ul").append(itemsList)
+                    $(dropdownClass).remove();
+                    elements.push(dropdownMain)
+                });
+                let priority = [ "About",  "dropdown", ];
+                elements = elements.concat(...$(".nav-item").remove())
+                priority.map(text => {
+                  elements = elements.filter(node => {
+                      let nodeText = node.querySelector("a").textContent.trim()
+                      if (text == nodeText) {
+                          $(".nav").append(node)
+                          return false;
+                      }
+                      return true;
+                  })
+                });
+                $(".nav").append(elements)
+              </script>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </div>
+</header>
+
+    </section>
+    <section class="content">
+      <div class="row">
+        <!-- <div class="col-sm-2">
+          <div class="pane-separator hidden-xs" style="margin-bottom:30em;"></div>
+          <div class="left-pane">
+          </div>
+        </div> -->
+        <div class="col-sm-8 col-sm-offset-2 content-div">
+          <div class="page-separator hidden-xs">
+            <h1 class="h1-strip" style="padding-bottom:8em; margin-bottom: 0;"></h1>
+          </div>
+          <div class="page-separator visible-xs">
+            <h1 class="h1-strip" style="padding-bottom:2em; margin-bottom: 0;"></h1>
+          </div>
+          <h1 class="post-title page-title" id="title"><a href="#title">Personalización De Terminal</a></h1>
+          <h2 id="requisitos">Requisitos</h2>
+
+<p>· Tener una terminal de Linux  <br />
+· Conexión a internet  <br />
+· NerdFonts</p>
+
+<h2 id="recursos">Recursos</h2>
+
+<p>PowerLevel10k: <a href="https://github.com/romkatv/powerlevel10k">PowerLevel10kGitHub</a>
+NerdFonts: <a href="https://www.nerdfonts.com/font-downloads">NerdFonts</a></p>
+
+<h2 id="procedimiento">Procedimiento</h2>
+
+<h3 id="zsh">ZSH</h3>
+<p>En este caso voy a personalizar la terminal que viene con Parrot Security, pero también es válido para otras distribuciones de Linux. Antes de empezar debemos comprobar que tengamos instalado ZSH. <br />
+Para comprobar si está instalado en el sistema ejecutaremos el siguiente comando.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌─[hunspook@debian]─[~]
+└──╼ <span class="nv">$zsh</span> <span class="nt">--version</span>
+zsh 5.8 <span class="o">(</span>x86_64-debian-linux-gnu<span class="o">)</span>
+</code></pre></div></div>
+<p>Si nos da un resultado es porque lo tenemos instalado, en caso contrario lo tendrían que instalar con <code class="language-plaintext highlighter-rouge">apt install zsh</code> y comprabamos que se haya instalado con el comando de la parte superior (<code class="language-plaintext highlighter-rouge">zsh --version</code>).</p>
+
+<p>Una vez instalado ZSH lo que haremos será definirla como nuestra SHELL por defecto, haremos el cambio estando como <code class="language-plaintext highlighter-rouge">superusuario</code>.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌─[root@debian]─[/home/hunspook]
+└──╼ usermod <span class="nt">-s</span> /usr/bin/zsh hunspook
+<span class="c"># Deben reemplazar "hunspook" por su nombre de usuario.</span>
+</code></pre></div></div>
+<p>Para ver los cambos que se realizaron, cerraremos la sesión e ingresaremos nuevamente y la hora de abrir una terminal ya veríamos ZSH como nuestra shell.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center"><img src="../assets/img/Customize/zsh_powerlevel10k/bash.png" alt="Antes" /></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center"><em>Antes</em></td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center"><img src="../assets/img/Customize/zsh_powerlevel10k/zsh.png" alt="Ahora" /></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center"><em>Después</em></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Al estar usando Parrot Security los diseños son diferentes, pero para comprobar que se hicieron los cambios correctamente podemos ejecutar el siguiente comando.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌[debian]─[11:43-22/06]─[/home/hunspook]
+└╼ hunspook<span class="nv">$echo</span> <span class="nv">$SHELL</span>
+/usr/bin/zsh
+</code></pre></div></div>
+<p>Y esto nos devolverá la SHELL que estamos usando.</p>
+
+<h3 id="powerlevel10k">PowerLevel10k</h3>
+
+<p>Una vez realizado los pasos anteriores pasaremos a instalar PowerLevel10k para nuestra ZSH. Para eso ingresaremos al link que está en la parte de recursos y bajaremos hasta la parte de instalación manual.</p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/instalacion.png" alt="Instalacion" /></p>
+
+<p>Y copiaremos los comandos en nuestra terminal. Esto lo podemos hacer tanto como para nuestro <code class="language-plaintext highlighter-rouge">usuario personal</code> como para <code class="language-plaintext highlighter-rouge">root</code>. Pero para eso debemos tener ya definida <code class="language-plaintext highlighter-rouge">ZSH</code> por defecto para nuestro <code class="language-plaintext highlighter-rouge">usuario personal</code> y para el usuario <code class="language-plaintext highlighter-rouge">root</code>. En este caso lo estoy haciendo para mi usuario personal.  <br />
+Primero clonamos el repositorio y luego copiamos y ejecutamos el siguiente comando.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌[debian]─[11:59-22/06]─[/home/hunspook]
+└╼hunspook<span class="nv">$git</span> clone <span class="nt">--depth</span><span class="o">=</span>1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+Clonando en <span class="s1">'/home/hunspook/powerlevel10k'</span>...
+remote: Enumerating objects: 92, <span class="k">done</span><span class="nb">.</span>
+remote: Counting objects: 100% <span class="o">(</span>92/92<span class="o">)</span>, <span class="k">done</span><span class="nb">.</span>
+remote: Compressing objects: 100% <span class="o">(</span>78/78<span class="o">)</span>, <span class="k">done</span><span class="nb">.</span>
+remote: Total 92 <span class="o">(</span>delta 16<span class="o">)</span>, reused 54 <span class="o">(</span>delta 10<span class="o">)</span>, pack-reused 0
+Recibiendo objetos: 100% <span class="o">(</span>92/92<span class="o">)</span>, 352.97 KiB | 605.00 KiB/s, listo.
+Resolviendo deltas: 100% <span class="o">(</span>16/16<span class="o">)</span>, listo.
+
+┌[debian]─[12:18-22/06]─[/home/hunspook]
+└╼hunspook<span class="nv">$echo</span> <span class="s1">'source ~/powerlevel10k/powerlevel10k.zsh-theme'</span> <span class="o">&gt;&gt;</span>~/.zshrc
+</code></pre></div></div>
+<p>Luego de haber ejecutado ambos comandos y teclearemos <code class="language-plaintext highlighter-rouge">zsh</code> en la terminal y le daremos a <code class="language-plaintext highlighter-rouge">enter</code> para empezar con la configuración de PowerLevel10k. Para ir configurando solo tendremos que teclear la tecla que nos aparece como opción.</p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/primero.png" alt="Primero" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/segundo.png" alt="Segundo" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/tercero.png" alt="Tercero" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/cuarto.png" alt="Cuarto" /></p>
+
+<p>Si ven los iconos y en la cuarta imagen los iconos no están uno encima del otro pueden continuar los 4 pasos tecleando la letra <code class="language-plaintext highlighter-rouge">y</code>. <br />
+En caso contrario necesitaremos instalar las NerdFonts, para ello nos dirigimos nuevamente a la parte de recursos y abrimos la página de NerdFonts pero primero cerraremos la configuración con la tecla <code class="language-plaintext highlighter-rouge">q</code>.</p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/paginanerd.png" alt="NerdPagina" /></p>
+
+<p>En este caso descargaré <code class="language-plaintext highlighter-rouge">Anonymice Nerd Font</code>.</p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/anonfont.png" alt="AnonFont" /></p>
+
+<p>Para instalar la fuente debemos estar como <code class="language-plaintext highlighter-rouge">super usuario</code>, y nos situamos en la ruta <code class="language-plaintext highlighter-rouge">/usr/share/local/fonts</code></p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌[debian]─[12:39-22/06]─[/usr/local/share/fonts]
+└╼root<span class="nv">$cd</span> /usr/local/share/fonts/
+</code></pre></div></div>
+<p>donde moveremos el archivo <code class="language-plaintext highlighter-rouge">.zip</code> que descargamos, recuerden cambiar <code class="language-plaintext highlighter-rouge">hunspook</code> por su usuario.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌[debian]─[12:41-22/06]─[/usr/local/share/fonts]
+└╼root<span class="nv">$mv</span> /home/hunspook/Descargas/AnonymousPro.zip <span class="nb">.</span>
+</code></pre></div></div>
+<p>Una vez con el archivo en la ruta actual, lo descomprimimos con…</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌[debian]─[12:42-22/06]─[/usr/local/share/fonts]
+└╼root<span class="nv">$unzip</span> AnonymousPro.zip
+</code></pre></div></div>
+<p>y seguidamente eliminamos el archivo <code class="language-plaintext highlighter-rouge">.zip</code>.</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌[debian]─[12:42-22/06]─[/usr/local/share/fonts]
+└╼root<span class="nv">$rm</span> AnonymousPro.zip
+</code></pre></div></div>
+<p>Les recomiendo cerrar sesión y volver a entrar para asegurarnos de que carguen las fuentes. Si entran a su terminal y les aparece la configuración de PowerLevel10k igual pueden seguir los siguientes pasos.   <br />
+Ahora cambiaremos el tipo de fuente dando <code class="language-plaintext highlighter-rouge">click derecho</code> y entrando a perfil y luego preferencias del perfil.</p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/preferencias.png" alt="Preferencias" /></p>
+
+<p>Desmarcamos <code class="language-plaintext highlighter-rouge">Usar la tipografía de ancho fijo del sistema</code>y en tipografía buscamos el nombre de la fuente que acabamos de descargar y la seleccionamos.</p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/seleccionfont.png" alt="NuevaFuente" /></p>
+
+<p>Una vez seleccionado entraremos a otra terminal o si ya están en la configuración continuaremos con los pasos de configuración de PowerLevel10k como vimo en la parte superior.   <br />
+Una vez lleguemos a este apartado cada uno tendrá que seleccionar la configuración que más le guste.</p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/configurando.png" alt="Configurando" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/configurando2.png" alt="Configurando2" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/configurando3.png" alt="Configurando3" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/configurando4.png" alt="Configurando4" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/configurando5.png" alt="Configurando5" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/configurando6.png" alt="Configurando6" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/configurando7.png" alt="Configurando7" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/configurando8.png" alt="Configurando8" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/configurando9.png" alt="Configurando9" /></p>
+
+<p><img src="../assets/img/Customize/zsh_powerlevel10k/configurando10.png" alt="Configurando10" /></p>
+
+<h2 id="mi-configuración">Mi configuración</h2>
+
+<p>· Prompt Style              -&gt; 2   <br />
+· Character Set             -&gt; 2   <br />
+· Prompt Color              -&gt; 4   <br />
+· Show current time?        -&gt; 1   <br />
+· Prompt Height             -&gt; 1   <br />
+· Prompt Spacing            -&gt; 2   <br />
+· Prompt Flow               -&gt; 1   <br />
+· Enable Transient Prompt?  -&gt; n    <br />
+· Instant Prompt Mode       -&gt; 1   <br />
+· Apply changes to ~/.zshrc -&gt; y</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center"><img src="../assets/img/Customize/zsh_powerlevel10k/resultado.png" alt="Resultado" /></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center"><em>Mi Configuración</em></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>** Espero que le haya sido de ayuda Z) **</p>
+
+
+        </div>
+        <div class="col-sm-2">
+          <div class="pane-separator hidden-xs" style="margin-bottom:30em;"></div>
+          <div class="pane-separator visible-xs" style="margin-bottom:5em;"></div>
+          <div class="right-pane" style="margin-left: 1em;">
+            
+              <div class="avatar">
+                <center>
+                  
+                    <img src="/assets/img/avatar.jpeg" alt="me" class="avatar-image">
+                  
+                  
+                    <p class="avatar-description"></p>
+                  
+                  <div class="right-links">
+                    
+<a href="https://github.com/hunspook" target="_blank">
+  <i class="fa fa-github fa-3x"></i>
+</a>
+
+
+
+
+<a href="https://twitter.com/hunspook" target="_blank">
+  <i class="fa fa-twitter fa-3x"></i>
+</a>
+
+
+
+                  </div>
+                </center>
+              </div>
+            
+            
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="footer">
+      <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="1894.4">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 12.0px Times; color: #000000; -webkit-text-stroke: #000000}
+    span.s1 {font-kerning: none}
+  </style>
+</head>
+<body>
+<p class="p1"><span class="s1"></span></p>
+<p class="p1"><span class="s1">
+<a href="https://github.com/hunspook" target="_blank">
+  <i class="fa fa-github fa-3x"></i>
+</a>
+
+
+
+
+<a href="https://twitter.com/hunspook" target="_blank">
+  <i class="fa fa-twitter fa-3x"></i>
+</a>
+
+
+<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space"> </span></span></p>
+</body>
+</html>
+
+    </section>
+  </div>
+</body>
+
+</html>
