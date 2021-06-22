@@ -13,21 +13,21 @@
 # you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
-title: Nes-Security-Blog
-author: "Nesrine kortas"
-email: "nesrinekortasblog@gmail.com"
+title: HunSpook
+author: "HunSpook"
+#email: "nesrinekortasblog@gmail.com"
 description: Penetration testing & Offensive security Tutorials.
 baseurl:  # the subpath of your site, e.g. /blog
-url: "https://neskortas.github.io" # the base hostname & protocol for your site, e.g. http://example.com
+url: "https://hunspook.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 
 # ------------------------------------------------------------------------------
 # Custom settings
 # ------------------------------------------------------------------------------
 # Useful links
-github_username: "neskortas"
+github_username: "hunspook"
 #facebook_username: "<facebook_username>"
-#twitter_username: "<twitter_username>"
-linkedin_id: "nesrine-kortas"
+twitter_username: "hunspook"
+#linkedin_id: ""
 
 # Theme
 theme: jekyll-theme-potato-hacker                 # Uncomment this
